@@ -8,7 +8,7 @@ st.write("""
 """
 )
 # Open and display an image
-image = Image.open('/home/ncuong/Programming/ts_webapp/ml_pic.webp')
+image = Image.open('./context/ml_pic.webp')
 st.image(image, use_column_width = True)
 
 # Create a sidebar header
@@ -20,7 +20,14 @@ def get_input():
     end_date = st.sidebar.text_input('End Date', '2021-08-12')
     return start_date,end_date
 
-df = pd.read_csv('/home/ncuong/Programming/ts_webapp/sample.csv')
+df = pd.read_csv('./context/sample.csv')
 start_date, end_date = get_input()
 
 # Display
+st.header('Data Statistics')
+st.write(df.describe())
+
+
+
+
+
