@@ -1,1 +1,1 @@
-Check my webapp at [saigon app](https://share.streamlit.io/ngocuong0105/stock_webapp/saigon.py)
+Check my [saigon app](https://share.streamlit.io/ngocuong0105/stock_webapp/saigon.py) for getting stock data.
