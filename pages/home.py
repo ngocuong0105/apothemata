@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
 
+import base64
 from page import Page
 
 
@@ -10,11 +11,6 @@ class home(Page):
 
     @staticmethod
     def load(title):
-        # Open and display an image
-        # image = Image.open('./context/ml_pic.webp')
-        # st.image(image, use_column_width = True)
-        # st.write('Hello')
-        import base64
 
         @st.cache(allow_output_mutation=True)
         def get_base64_of_bin_file(bin_file):
@@ -22,7 +18,7 @@ class home(Page):
                 data = f.read()
             return base64.b64encode(data).decode()
 
-        def set_png_as_page_bg(png_file):
+        def set_background(png_file):
             bin_str = get_base64_of_bin_file(png_file)
             page_bg_img = '''
             <style>
@@ -37,5 +33,41 @@ class home(Page):
             st.markdown(page_bg_img, unsafe_allow_html=True)
             return
 
-        set_png_as_page_bg('/home/ncuong/Programming/ts_webapp/context/blocks.gif')
+        def set_title(title):
+            Title_html = """
+                <style>
+                    .title h1{
+                    line-height: 650px;
+                    text-align: center;
+                    color = transparent;
+                    user-select: none;
+                    font-size: 70px;
+                    font-family: sans-serifed;
+                    color: white;
+                    background: repeating-linear-gradient(45deg, green 0%, blue 15%, purple 25%, white 50%);
+                    background-size: 600vw 600vw;
+                    -webkit-text-fill-color: transparent;
+                    -webkit-background-clip: text;
+                    animation: slide 5s linear infinite forwards;
+                    }
+                    @keyframes slide {
+                    0%{
+                        background-position-x: 0%;
+                    }
+                    100%{
+                        background-position-x: 600vw;
+                    }
+                    }
+                </style> 
+                
+                <div class="title">
+                    <h1>Welcome to Saigon</h1>
+                </div>
+
+                """
+            st.markdown(Title_html,unsafe_allow_html=True)
+            return
+
+        set_title(title)
+        set_background('./context/blocks.gif')
 

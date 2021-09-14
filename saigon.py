@@ -20,19 +20,6 @@ app = MultiPage()
 # Title of the main page
 # display = Image.open('context/ml_pic.webp')
 # display = np.array(display)
-st.markdown('''<h1 style = 
-            'line-height: 700px;
-            text-align: center;
-            align-items:center;
-            display:flex;
-            flex-direction:column;
-            font-family: sans-serifed;
-            '>
-            My First Application
-            </h1>
-            ''', 
-            unsafe_allow_html=True
-)
 
 # col1, col2 = st.columns(2)
 # col1.image(display, width = 400)

@@ -10,6 +10,7 @@ class checkStock(Page):
 
     @staticmethod
     def load(title):
+        # Add a title
         st.title(title)
         @st.cache
         def load_data(start,end,ticker):
@@ -20,9 +21,6 @@ class checkStock(Page):
 
             df_stock = df_stock.reset_index() 
             return df_stock
-
-        # Add a title and image
-        st.title('Check your stocks')
 
         # User input
 
