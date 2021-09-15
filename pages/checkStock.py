@@ -52,7 +52,7 @@ class checkStock(Page):
         return data
 
     def _wait_message(self):
-        st.write('Please wait 1 minute access to data.')
+        st.write('Please wait 1 minute to access data.')
         # Add a placeholder
         latest_iteration = st.empty()
         bar = st.progress(0)
