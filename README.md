@@ -1,1 +1,1 @@
-Check my [saigon app](https://share.streamlit.io/ngocuong0105/stock_webapp/saigon.py) for getting stock data.
+Check my [apothemata app](https://share.streamlit.io/ngocuong0105/stock_webapp/apothemata.py) for getting stock data.

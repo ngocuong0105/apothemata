@@ -1,0 +1,22 @@
+body {
+    color: #fff;
+    background-color: #4F8BF9;
+}
+
+.stButton>button {
+    color: #4F8BF9;
+    border-radius: 50%;
+    height: 3em;
+    width: 3em;
+}
+
+.stTextInput>div>div>input {
+    color: #4F8BF9;
+}
+/* Use in python
+def local_css(file_name):
+# st.write('HUI')
+with open(file_name) as f:
+    st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
+
+local_css("./context/search_style.css") */

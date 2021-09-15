@@ -63,8 +63,8 @@ class checkStock(Page):
             bar.progress((i+1)/60)
             time.sleep(1)
 
-    @st.cache(show_spinner=False, suppress_st_warning=True)
-    def _search_ticker(self, keywords: 'list[str]'):
+    @st.cache(show_spinner=False)
+    def _search_ticker(self, keywords: 'list[str]'):    
         json_file = open('context/symbols.json',)
         stockList = json.load(json_file)
         ticker_results = {}
@@ -75,7 +75,7 @@ class checkStock(Page):
 
         return ticker_results
 
-    @lru_cache(None)
+    @st.cache(show_spinner=False)
     def _search_keyword_cached(self, keyword:str , search_space: 'list[dict]'):
         ticker_info = process.extractOne(keyword, search_space)[0]
         return ticker_info
@@ -88,10 +88,12 @@ class checkStock(Page):
         end_date = st.sidebar.text_input('End Date', '2021-08-12')
         
         keywords = [keyword for keyword in st.sidebar.text_input(\
-                                            'Search Symbol (comma separated keywords)',\
-                                            'google, alphabet').split(',') 
+                                            'Search Ticker (comma separated keywords)',\
+                                            'google, tesla').split(',') 
                                             if keyword !='']
-
+        if keywords == []:
+            st.write('Please search ticker')
+            return None, None, None, None, None
         ticker_results = self._search_ticker(keywords)
 
         # Select Ticker
@@ -105,9 +107,10 @@ class checkStock(Page):
     def load_page(self):
         self.show_title()
         start, end, ticker, company_name, source = self.get_sidebar_input()
-        # Get stock data
         time_col = 'date'
-
+        # Get stock data
+        if ticker==None:
+            return
         data = eval('self.load_data_' + f'{source}'+ '("'+ticker+'")')
         data = self._filter_loaded_data(data, start, end)
 

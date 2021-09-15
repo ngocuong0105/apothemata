@@ -19,5 +19,5 @@ class MultiPage:
         st.sidebar.title('App Navigation')
         selected_title = st.sidebar.radio("Go to", list(self.pages.keys()))
         
-        # run the app function 
+        # run the app function
         self.pages[selected_title].load_page()
