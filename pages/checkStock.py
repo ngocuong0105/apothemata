@@ -2,6 +2,7 @@ import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd 
 import requests
+from functools import lru_cache
 from fuzzywuzzy import process
 import time
 import json
@@ -74,6 +75,11 @@ class checkStock(Page):
 
         return ticker_results
 
+    @lru_cache(None)
+    def _search_keyword_cached(self, keyword:str , search_space: 'list[dict]'):
+        ticker_info = process.extractOne(keyword, search_space)[0]
+        return ticker_info
+    
     def get_sidebar_input(self):
         # User input
         st.sidebar.header('Please provide input:')
