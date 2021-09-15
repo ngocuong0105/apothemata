@@ -63,7 +63,7 @@ class checkStock(Page):
             time.sleep(1)
 
     @st.cache(show_spinner=False, suppress_st_warning=True)
-    def _search_ticker(self, keywords: list[str]):
+    def _search_ticker(self, keywords: 'list[str]'):
         json_file = open('context/symbols.json',)
         stockList = json.load(json_file)
         ticker_results = {}
