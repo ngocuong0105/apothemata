@@ -8,7 +8,7 @@ from multipage import MultiPage
 import pages
 
 # App layout settings
-st.set_page_config(page_title='IUH Corp.',\
+st.set_page_config(page_title='Apothemata',\
                     page_icon='chart_with_upwards_trend',\
                     layout='wide',\
                     initial_sidebar_state='auto')
@@ -40,3 +40,7 @@ app.run()
 # Highest moving stock
 # Source code link to git
 # Popular stocks
+# Dowload dataset
+# if not correct ticker give message
+# little life-data game
+# learn css/html to put all css markdowns in context

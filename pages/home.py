@@ -9,8 +9,7 @@ class home(Page):
     def __init__(self, title: str) -> None:
         super().__init__(title)
 
-    @staticmethod
-    def load(title):
+    def load_page(self):
 
         @st.cache(allow_output_mutation=True)
         def get_base64_of_bin_file(bin_file):
@@ -41,11 +40,11 @@ class home(Page):
                     text-align: center;
                     color = transparent;
                     user-select: none;
-                    font-size: 70px;
+                    font-size: 80px;
                     font-family: sans-serifed;
                     color: white;
-                    background: repeating-linear-gradient(45deg, green 0%, blue 15%, purple 25%, white 50%);
-                    background-size: 600vw 600vw;
+                    background: repeating-linear-gradient(45deg, #faff8a 0%, #b6f5f0 25%, #d3ddff 50%, white 70%);
+                    background-size: 700vw 700vw;
                     -webkit-text-fill-color: transparent;
                     -webkit-background-clip: text;
                     animation: slide 10s linear infinite forwards;
@@ -57,15 +56,13 @@ class home(Page):
                     100%{
                         background-position-x: 600vw;
                     }
-                    }
+                }
                     .subtitle h2 {
-                    line-height: 5px;
+                    line-height: 15px;
                     text-align: center;
-                    color = white;
-                    font-size: 20px;
+                    font-size: 25px;
                     font-family: sans-serifed;
-                    color: white;
-                    background: repeating-linear-gradient(45deg, green 0%, blue 15%, purple 25%, white 50%);
+                    background: repeating-linear-gradient(45deg, #faff8a 0%, #b6f5f0 25%, #d3ddff 50%, white 70%);
                     background-size: 600vw 600vw;
                     -webkit-text-fill-color: transparent;
                     -webkit-background-clip: text;
@@ -82,6 +79,6 @@ class home(Page):
             st.markdown(title_html,unsafe_allow_html=True)
             return
 
-        set_title(title)
+        set_title(self.title)
         set_background('./context/blocks.gif')
 

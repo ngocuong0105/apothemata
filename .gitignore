@@ -1,3 +1,5 @@
 /sample.csv
 /small_sample.csv
 pages/__pycache__/**
+__pycache__/**
+test.py
