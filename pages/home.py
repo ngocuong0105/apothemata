@@ -34,7 +34,7 @@ class home(Page):
             return
 
         def set_title(title):
-            Title_html = """
+            title_html = """
                 <style>
                     .title h1{
                     line-height: 650px;
@@ -48,7 +48,7 @@ class home(Page):
                     background-size: 600vw 600vw;
                     -webkit-text-fill-color: transparent;
                     -webkit-background-clip: text;
-                    animation: slide 5s linear infinite forwards;
+                    animation: slide 10s linear infinite forwards;
                     }
                     @keyframes slide {
                     0%{
@@ -58,14 +58,28 @@ class home(Page):
                         background-position-x: 600vw;
                     }
                     }
+                    .subtitle h2 {
+                    line-height: 5px;
+                    text-align: center;
+                    color = white;
+                    font-size: 20px;
+                    font-family: sans-serifed;
+                    color: white;
+                    background: repeating-linear-gradient(45deg, green 0%, blue 15%, purple 25%, white 50%);
+                    background-size: 600vw 600vw;
+                    -webkit-text-fill-color: transparent;
+                    -webkit-background-clip: text;
+                    animation: slide 10s linear infinite forwards;
+                    }
                 </style> 
-                
                 <div class="title">
-                    <h1>Welcome to Saigon</h1>
+                    <h1>APOTHEMATA</h1>
                 </div>
-
+                <div class="subtitle">
+                    <h2>All stock data into one place</h2>
+                </div>
                 """
-            st.markdown(Title_html,unsafe_allow_html=True)
+            st.markdown(title_html,unsafe_allow_html=True)
             return
 
         set_title(title)
