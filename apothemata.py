@@ -28,3 +28,5 @@ app.run()
 # if not correct ticker give message
 # little life-data game
 # learn css/html to put all css markdowns in context
+# improve search engine
+# get common stocks json file to search in it
