@@ -37,3 +37,5 @@ app.run()
 # YOLO trade page:
 # How risky you are? - I have diadomnd hands, Lets go to the MOON
 # show timeline and buy/sell popups, position, P/L
+# YOLO Backtest 
+# YOLO start strading: Trading suggestions

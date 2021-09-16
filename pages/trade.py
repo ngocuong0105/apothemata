@@ -109,10 +109,10 @@ class trade(Page):
         num_subs,num_comments,max_level = '','',''
 
         num_subs = st.number_input('Select number of hottest submissions\
-                        the strategy will scrape through (recommended 20-80)', value = 40, step=1)
+                        the strategy will scrape through (recommended 10-80)', value = 20, step=1)
         if num_subs != '':
             num_subs = int(num_subs)
-            num_comments = st.number_input("Select number of comments with most upvotes to consider (recommended 50-200)", value = 100, step=1)
+            num_comments = st.number_input("Select number of comments with most upvotes to consider (recommended 10-150)", value = 50, step=1)
         if num_comments != '':
             num_comments = int(num_comments)
             txt = 'Each reddit submission has comments and replies to comments.\
@@ -226,12 +226,12 @@ class trade(Page):
                     if sentiment=='Positive':
                         buy[w]+=1
                         date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d')
-                        time.sleep(0.3)
+                        time.sleep(0.1)
                         st.write(f'Buy: {w} on {date}')
                     elif sentiment=='Negative':
                         sell[w]+=1
                         date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d')
-                        time.sleep(0.3)
+                        time.sleep(0.1)
                         st.write(f'Sell: {w} on {date}')
         
 
