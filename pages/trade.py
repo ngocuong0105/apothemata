@@ -7,6 +7,8 @@ import time
 import pandas as pd
 import regex as re
 import collections
+import nltk
+nltk.download('vader_lexicon')
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from datetime import datetime
 import pickle
