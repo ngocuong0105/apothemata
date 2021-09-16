@@ -2,21 +2,44 @@ import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd 
 import requests
-from functools import lru_cache
 from fuzzywuzzy import process
 import time
 import json
 from alpha_vantage.timeseries import TimeSeries
 import yfinance as yf
-
+import pickle
 from page import Page
 
 class checkStock(Page):
-    def __init__(self, title: str, alpha_vantage_key:str = '9VA69FN762V63TW7') -> None:
+    def __init__(self, title: str) -> None:
         super().__init__(title)
         self.sources = {'Yahoo Finance':'yahoo', 'Alpha Vantage (free license)':'alpha_vantage'}
-        self.ava_key = alpha_vantage_key
+        self.ava_key = st.secrets['alpha_vantage_key']
+
+    # Load page
+    def load_page(self):
+        self.show_title()
+        start, end, ticker, company_name, source = self.get_sidebar_input()
+        time_col = 'date'
+        if ticker==None:
+            return
         
+        # Get stock data
+        data = eval('self.load_data_' + f'{source}'+ '("'+ticker+'")')
+        data = self._filter_loaded_data(data, start, end)
+
+        if len(data)==0:
+            if ticker == []:
+                st.write('Please select ticker')
+            else:
+                st.markdown('Cannot find ticker')
+            return
+
+        self.plot(data, time_col, ticker, company_name)
+        self.show_data(data, ticker)
+        self.show_stats(data, ticker)
+        self.show_trading_hours()
+
     def _filter_loaded_data(self, data:pd.DataFrame, start:str, end:str):
         if len(data) == 0:
             st.write('No data loaded')
@@ -40,13 +63,20 @@ class checkStock(Page):
         ticker_results = {}
         for keyword in keywords:
             # search ticker symbol
-            ticker_info = self._search_keyword_cached(keyword)
-            ticker_results[ticker_info['symbol']] = ticker_info['name']
+            symb, name = self._search_keyword_cached(keyword)
+            ticker_results[symb] = name
         return ticker_results
 
     @st.cache(show_spinner=False, suppress_st_warning=True)
     def _search_keyword_cached(self, keyword:str):
 
+        # quick search exact match
+        with open('context/symbols_dict.pickle','rb') as f:
+            symbols = pickle.load(f)
+        if keyword in symbols:
+            return keyword, symbols[keyword]
+            
+        # more sophisticated search not necessarily exact match
         json_file = open('context/s&p_symbols.json',)
         popular_stocks = json.load(json_file)
         ticker_info, score = process.extractOne(keyword, popular_stocks)
@@ -54,8 +84,8 @@ class checkStock(Page):
             json_file = open('context/symbols.json',)
             stockList = json.load(json_file)
             ticker_info = process.extractOne(keyword, stockList)[0]
-
-        return ticker_info
+        
+        return ticker_info['symbol'], ticker_info['name']
 
     @st.cache(show_spinner=False, suppress_st_warning=True)
     def load_data_yahoo(self, ticker:str):
@@ -63,12 +93,12 @@ class checkStock(Page):
         data.columns = [f'{ticker}'+'-'+col.lower() for col in data.columns]
         data = data.reset_index()
         data = data.rename(columns = {'Date':'date'})
+        data = data.sort_values(by = 'date', ascending = False)
         return data
 
     @st.cache(show_spinner=False, suppress_st_warning=True)
     def load_data_alpha_vantage(self, ticker:str, outputsize:str = 'full'):
         ts = TimeSeries(key=self.ava_key, output_format='pandas')
-        # intraday_data, _ = ts.get_intraday(ticker, outputsize='full', interval='1m')
         try:
             data, _ = ts.get_daily(ticker, outputsize=outputsize)
             data.columns = [f'{ticker}' + '-' + col[3:] for col in data.columns]
@@ -89,7 +119,7 @@ class checkStock(Page):
     def get_sidebar_input(self):
         # User input
         st.sidebar.header('Please provide input:')
-        source = st.sidebar.selectbox('Select data source', ['Yahoo Finance', 'Alpha Vantage (free license)'])
+        source = st.sidebar.selectbox('Select data source', ['Yahoo Finance', 'Alpha Vantage (free license)'], key = 'data_source')
         start_date = st.sidebar.text_input('Start Date', '2020-01-01')
         end_date = st.sidebar.text_input('End Date', '2021-08-12')
         
@@ -108,8 +138,9 @@ class checkStock(Page):
             
         # Select Ticker
         ticker = st.sidebar.selectbox(
-            'Select Ticker (e.g. AAPL, GOOGL, SPY, TSLA)',
-            list(ticker_results.keys())
+            'Select Ticker (e.g. AAPL, GME, TSLA)',
+            list(ticker_results.keys()),
+            key = 'ticker'
             )
         company_name = ticker_results[ticker]
         return start_date, end_date, ticker, company_name, self.sources[source]
@@ -154,28 +185,12 @@ class checkStock(Page):
             st.subheader(f'{ticker} Statistics')
             st.write(data.describe())
 
-    # Load page
-    def load_page(self):
-        self.show_title()
-        start, end, ticker, company_name, source = self.get_sidebar_input()
-        time_col = 'date'
-        if ticker==None:
-            return
-        
-        # Get stock data
-        data = eval('self.load_data_' + f'{source}'+ '("'+ticker+'")')
-        data = self._filter_loaded_data(data, start, end)
-
-        if len(data)==0:
-            if ticker == []:
-                st.write('Please select ticker')
-            else:
-                st.markdown('Cannot find ticker')
-            return
-
-        self.plot(data, time_col, ticker, company_name)
-        self.show_data(data, ticker)
-        self.show_stats(data, ticker)
+    # Display trading hours
+    def show_trading_hours(self):
+        if st.checkbox('Show market hours'):
+            with open('./context/market_hours.txt','r') as f:
+                s = f.read()
+            st.write(s)
 
 DEFAULT_LAYOUT = dict(
     xaxis=dict(

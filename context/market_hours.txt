@@ -1,0 +1,12 @@
+Market Trading Hours
+
+|Exchange|Open|Close|
+|:-------:|--------:|--------:|
+|[Frankfurt](https://www.boerse-frankfurt.de/en) | 9:00 AM | 8:00 PM | 
+|[New York](https://goo.gl/eODOhO) | 9:30 AM  | 4:00 PM|
+|[CME](http://goo.gl/VZZDPg) | 5:00 PM | 4:15 PM |
+|[CBOE](http://goo.gl/fMSNBY) | 8:30 AM | 3:15 PM  |
+|[Tokyo](http://goo.gl/Aiwygk) | 9:00 AM | 3:00 PM  |
+|[Hong Kong](http://goo.gl/vLR2vh) | 9:30 AM | 4:00 PM  |
+* Hours respective to their own timezone.
+[source](https://goo.gl/hk9CB4)

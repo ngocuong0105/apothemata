@@ -3,3 +3,5 @@
 pages/__pycache__/**
 __pycache__/**
 test.py
+/.streamlit/secrets.toml
+/data

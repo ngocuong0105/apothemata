@@ -39,7 +39,7 @@ class home(Page):
         title_html = """
             <style>
                 .title h1{
-                line-height: 650px;
+                line-height: 700px;
                 text-align: center;
                 color = transparent;
                 user-select: none;
@@ -61,7 +61,7 @@ class home(Page):
                 }
             }
                 .subtitle h2 {
-                line-height: 15px;
+                line-height: 100px;
                 text-align: center;
                 font-size: 25px;
                 font-family: sans-serifed;
@@ -76,7 +76,7 @@ class home(Page):
                 <h1>APOTHEMATA</h1>
             </div>
             <div class="subtitle">
-                <h2>All stock data into one place</h2>
+                <h2>The YOLO trade app</h2>
             </div>
             """
         st.markdown(title_html,unsafe_allow_html=True)

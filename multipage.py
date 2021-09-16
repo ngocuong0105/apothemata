@@ -11,8 +11,8 @@ class MultiPage:
         '''
         self.pages = {} 
     
-    def add_page(self, title:str, page:page.Page) -> None: 
-        self.pages[title] = page
+    def add_page(self, page:page.Page) -> None: 
+        self.pages[page.title] = page
         
     def run(self):
         # Dropdown to select the page to run  
