@@ -8,10 +8,11 @@ import pandas as pd
 import regex as re
 import collections
 import nltk
-# nltk.download('vader_lexicon')
+nltk.download('vader_lexicon', quiet = True)
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from datetime import datetime
 import pickle
+
 from page import Page
 
 class trade(Page):
@@ -71,7 +72,7 @@ class trade(Page):
         elif risk_type == 'I want to protect my savings from inflation.':
             seconds = randint(2,10)
             self._wait_message(seconds)
-            st.write('🙄 Strategy not available. Who cares about savings? Here we play big!')
+            st.write('🙄 Strategy not available. Who cares about savings? Here we play big - win big!')
         elif risk_type == 'I have diamond hands!':
             st.write('💎 Great! Holding meme stonks is in your nature.')
             options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other', '']
@@ -97,7 +98,7 @@ class trade(Page):
                     del st.session_state['scrapping_submission']
 
         elif risk_type == 'Lets go to the moon!':
-            st.write('🤑 Superb... Money will be your surname!')
+            st.write('🤑 Superb... Armstrong will be your surname!')
 
     def _reddit_user_input(self) -> tuple:
         txt = '<p style="font-family:sans-serif; color:#F63366; font-size: 21px;"> Lets build your trading strategy</p>'
@@ -207,13 +208,6 @@ class trade(Page):
         st.session_state['scrapping_submission'] = comments
         return comments
 
-    def _within_time_interval(self, reddit_obj: praw.models, start:datetime, end: datetime):
-        utc_time = datetime.utcfromtimestamp(reddit_obj.created_utc).strftime('%Y-%m-%d') 
-        datetime_time = pd.to_datetime(utc_time)
-        if datetime_time < start or datetime_time > end:
-            return False
-        return True
-
     def _YOLO_trade(self, comments: 'list[praw.models.Comment]'):
         buy = collections.defaultdict(int)
         sell = collections.defaultdict(int)
@@ -236,7 +230,7 @@ class trade(Page):
                         time.sleep(0.1)
                         st.write(f'Sell: {symbols[w]} ({w}) on {date}')
         
-
+    
     def _nltk_sentiment(self, text: str):
         sia = SentimentIntensityAnalyzer()
         sub_entries_nltk = {'negative': 0, 'positive' : 0, 'neutral' : 0}
@@ -260,6 +254,12 @@ class trade(Page):
             sub_entries_nltk['neutral'] = sub_entries_nltk['neutral'] + 1
             return 'Neutral'
 
+    def _within_time_interval(self, reddit_obj: praw.models, start:datetime, end: datetime):
+        utc_time = datetime.utcfromtimestamp(reddit_obj.created_utc).strftime('%Y-%m-%d') 
+        datetime_time = pd.to_datetime(utc_time)
+        if datetime_time < start or datetime_time > end:
+            return False
+        return True
 
     def _click_button(self, txt:str, on_click = None, args = None):
         st.markdown("""
