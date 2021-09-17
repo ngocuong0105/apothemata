@@ -215,7 +215,7 @@ class trade(Page):
         st.write('Scraping submissions is done!')
         return comments
 
-    def _YOLO_trade(self, comments: 'list[praw.models.Comment]') -> tuple['dict']:
+    def _YOLO_trade(self, comments: 'list[praw.models.Comment]') -> 'tuple[dict]':
         buy = collections.defaultdict(int)
         sell = collections.defaultdict(int)
         with open('context/symbols_dict.pickle','rb') as f:
