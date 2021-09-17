@@ -39,3 +39,8 @@ app.run()
 # show timeline and buy/sell popups, position, P/L
 # YOLO Backtest 
 # YOLO start strading: Trading suggestions
+
+# 1. Fix Downlkoad_vade lixicon
+# 2. Fix samsung - cannot find it
+# 3. Show company names which are boouht/sold, as tickers are weird A, AA,UK?
+# 4. when changing data source in checkStocks should not hit cache load data!

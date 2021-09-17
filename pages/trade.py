@@ -8,7 +8,7 @@ import pandas as pd
 import regex as re
 import collections
 import nltk
-nltk.download('vader_lexicon')
+# nltk.download('vader_lexicon')
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 from datetime import datetime
 import pickle
@@ -67,11 +67,11 @@ class trade(Page):
         if risk_type == 'I want to make a risk-averse long term investment.':
             seconds = randint(2,10)
             self._wait_message(seconds)
-            st.write('😬 Sorry you are in the wrong Web APP.')
+            st.write('😬 Risk-averse, really? Sorry you are using the wrong Web App.')
         elif risk_type == 'I want to protect my savings from inflation.':
             seconds = randint(2,10)
             self._wait_message(seconds)
-            st.write('🙄 Option is not available, here we play big!')
+            st.write('🙄 Strategy not available. Who cares about savings? Here we play big!')
         elif risk_type == 'I have diamond hands!':
             st.write('💎 Great! Holding meme stonks is in your nature.')
             options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other', '']
@@ -102,7 +102,7 @@ class trade(Page):
     def _reddit_user_input(self) -> tuple:
         txt = '<p style="font-family:sans-serif; color:#F63366; font-size: 21px;"> Lets build your trading strategy</p>'
         st.markdown(txt, unsafe_allow_html=True)
-        txt = '<p style="font-family:sans-serif; color: white; font-size: 14px;"> We will scrape through popular reddit posts and exucate trades based on users sentiment.</p>'
+        txt = '<p style="font-family:sans-serif; color: white; font-size: 14px;"> We will scrape through popular reddit posts and execute trades based on users sentiment.</p>'
         st.markdown(txt, unsafe_allow_html=True)
 
         start = pd.to_datetime(st.text_input('Select start date', '2021-09-01'))
@@ -229,12 +229,12 @@ class trade(Page):
                         buy[w]+=1
                         date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d')
                         time.sleep(0.1)
-                        st.write(f'Buy: {w} on {date}')
+                        st.write(f'Buy: {symbols[w]} ({w}) on {date}')
                     elif sentiment=='Negative':
                         sell[w]+=1
                         date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d')
                         time.sleep(0.1)
-                        st.write(f'Sell: {w} on {date}')
+                        st.write(f'Sell: {symbols[w]} ({w}) on {date}')
         
 
     def _nltk_sentiment(self, text: str):
