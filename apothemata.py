@@ -40,7 +40,12 @@ app.run()
 # YOLO Backtest 
 # YOLO start strading: Trading suggestions
 
-# 1. Fix Downlkoad_vade lixicon
-# 2. Fix samsung - cannot find it
-# 3. Show company names which are boouht/sold, as tickers are weird A, AA,UK?
-# 4. when changing data source in checkStocks should not hit cache load data!
+# 1. Fix samsung - cannot find it
+# 2. when changing data source in checkStocks should not hit cache load data!
+# 3. Get prices when trading(maybe last period better than start-end date?)
+
+# import yfinance as yf
+# msft = yf.Ticker("MSFT")
+# start='2021-08-13' 
+# end='2021-08-14'
+# df_price = msft.history(period='7d',interval='1m')
