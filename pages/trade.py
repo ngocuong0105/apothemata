@@ -35,9 +35,7 @@ class trade(Page):
                 seconds = randint(5,10)
                 self._wait_message(seconds)
                 txt = '🤪 No strategy found. We are sorry you are retarded.'
-                css_txt = f'<p style="font-family:sans-serif;color:white;font-size: 20px;text-align:center;line-height: 150px;"> {txt} </p>'
-                st.markdown(css_txt, unsafe_allow_html=True)
-
+                self._markdown_css(txt,20,'white',height=200)
 
     def get_sidebar_input(self) -> str:
         st.sidebar.header('Please provide input:')
@@ -66,15 +64,18 @@ class trade(Page):
         risk_type = st.selectbox('What is your risk appetite?', options, index = len(options)-1)
 
         if risk_type == 'I want to make a risk-averse long term investment.':
-            seconds = randint(2,10)
+            seconds = randint(5,10)
             self._wait_message(seconds)
-            st.write('😬 Risk-averse, really? Sorry you are using the wrong Web App.')
+            txt = '😬 Risk-averse, really? Sorry you are using the wrong Web App.'
+            self._markdown_css(txt,20,'white',height=200)
         elif risk_type == 'I want to protect my savings from inflation.':
-            seconds = randint(2,10)
+            seconds = randint(5,10)
             self._wait_message(seconds)
-            st.write('🙄 Strategy not available. Who cares about savings? Here we play big - win big!')
+            txt = '🙄 Strategy not available. Who cares about savings? Here we play big - win big!'
+            self._markdown_css(txt,20,'white',height=200)
         elif risk_type == 'I have diamond hands!':
-            st.write('💎 Great! Holding meme stonks is in your nature.')
+            txt = '💎 Great! Holding meme stonks is in your nature.'
+            self._markdown_css(txt,14,'white',height=17,position='left')
             options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other', '']
             subreddit = st.selectbox('Select your favourite subreddit',options, index = len(options)-1)
             if subreddit == 'other':
@@ -85,26 +86,35 @@ class trade(Page):
 
             user_input = self._reddit_user_input()
             pressed = self._click_button('Build Strategy')
-            if pressed and 'r/' in subreddit[:2] and 'trading ' not in st.session_state:
-                comments = self._load_reddit_data(subreddit[2:],user_input)
-            elif pressed and 'trading ' not in st.session_state:
-                comments = self._load_reddit_data(subreddit, user_input)
-            if 'scrapping_submission' in st.session_state:
-                trade = self._click_button('YOLO start trading!')
-                st.session_state['trading'] = False
-                if trade : 
-                    self._YOLO_trade(st.session_state['scrapping_submission'])
-                    del st.session_state['trading']
-                    del st.session_state['scrapping_submission']
+            # init current running session
+            if len(st.session_state)==0:
+                st.session_state['current_session'] = ('building_strategy',None) # name,data
+            if st.session_state['current_session'][0]=='building_strategy':
+                if pressed and 'r/' in subreddit[:2]:
+                    comments = self._load_reddit_data(subreddit[2:],user_input)
+                    st.session_state['current_session'] = ('trading',comments)
+                    self._click_button('YOLO start trading!')
+                elif pressed:
+                    comments = self._load_reddit_data(subreddit, user_input)
+                    st.session_state['current_session'] = ('trading',comments)
+                    self._click_button('YOLO start trading!')
+            elif st.session_state['current_session'][0]=='trading':
+                buy,sell = self._YOLO_trade(st.session_state['current_session'][1]) # takes data from prev session
+                st.session_state['current_session'] = ('display_trading_summary',(buy,sell))
+                self._click_button('Generate trading summary.')
+            elif st.session_state['current_session'][0] == 'display_trading_summary':
+                buy,sell = st.session_state['current_session'][1]
+                self._trade_summary(buy,sell)
 
         elif risk_type == 'Lets go to the moon!':
-            st.write('🤑 Superb... Armstrong will be your surname!')
+            st.write('💰🤑💰 Superb... Armstrong will be your surname!')
 
     def _reddit_user_input(self) -> tuple:
-        txt = '<p style="font-family:sans-serif; color:#F63366; font-size: 21px;"> Lets build your trading strategy</p>'
-        st.markdown(txt, unsafe_allow_html=True)
-        txt = '<p style="font-family:sans-serif; color: white; font-size: 14px;"> We will scrape through popular reddit posts and execute trades based on users sentiment.</p>'
-        st.markdown(txt, unsafe_allow_html=True)
+        txt = 'Lets build your trading strategy'
+        self._markdown_css(txt,25,'#F63366')
+
+        txt = 'We will scrape through popular reddit posts and execute trades based on users sentiment'
+        self._markdown_css(txt,14,'white', height=17, position='left')
 
         start = pd.to_datetime(st.text_input('Select start date', '2021-09-01'))
         end = pd.to_datetime(st.text_input('Select end date', '2021-09-15'))
@@ -112,10 +122,10 @@ class trade(Page):
         num_subs,num_comments,max_level = '','',''
 
         num_subs = st.number_input('Select number of hottest submissions\
-                        the strategy will scrape through (recommended 10-80)', value = 20, step=1)
+                        the strategy will scrape through (recommended 10-100)', value = 20, step=1)
         if num_subs != '':
             num_subs = int(num_subs)
-            num_comments = st.number_input("Select number of comments with most upvotes to consider (recommended 10-150)", value = 50, step=1)
+            num_comments = st.number_input("Select number of comments with most upvotes to consider (recommended 50-500)", value = 50, step=1)
         if num_comments != '':
             num_comments = int(num_comments)
             txt = 'Each reddit submission has comments and replies to comments.\
@@ -123,9 +133,7 @@ class trade(Page):
                 We will use Breadth First Traversal to scrape all comments and replies. Define level of tree such that\
                 level 0 considers only comments to the submission, then\
                 level 1 considers replies to comments, etc.'
-
-            css_txt = f'<p style="font-family:sans-serif; color:white ; font-size: 12px;"> {txt} </p>'
-            st.markdown(css_txt, unsafe_allow_html=True)
+            self._markdown_css(txt,14,'white',height=17,position='left')
             max_level = st.number_input("Select maximum level of comments tree (recommended 1-10)", value = 5, step = 1)
         
         if max_level != '':
@@ -205,14 +213,18 @@ class trade(Page):
         sub_placeholder.empty()
         com_placeholder.empty()
         st.write('Scraping submissions is done!')
-        st.session_state['scrapping_submission'] = comments
         return comments
 
-    def _YOLO_trade(self, comments: 'list[praw.models.Comment]'):
+    def _YOLO_trade(self, comments: 'list[praw.models.Comment]') -> tuple['dict']:
         buy = collections.defaultdict(int)
         sell = collections.defaultdict(int)
         with open('context/symbols_dict.pickle','rb') as f:
             symbols = pickle.load(f)
+        
+        # dislpay trades
+        self.placeholder = st.empty()
+        bar = st.progress(0)
+        i = 0
         # sentiment analysis for each comment
         for com in comments:
             words = re.split("\s|(?<!\d)[,.](?!\d)", com.body)
@@ -220,17 +232,34 @@ class trade(Page):
                 if w in symbols:
                     sentiment = self._nltk_sentiment(com.body)
                     if sentiment=='Positive':
-                        buy[w]+=1
-                        date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d')
+                        date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d %H:%M:%S')
+                        buy[(w,date)]+=1
+                        txt = f'Buy: {symbols[w]} ({w}) on {date}'
+                        self._markdown_css(txt,font_size=14,color='red',height=17,position='left',placeholder=True)
                         time.sleep(0.1)
-                        st.write(f'Buy: {symbols[w]} ({w}) on {date}')
                     elif sentiment=='Negative':
-                        sell[w]+=1
-                        date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d')
+                        date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d %H:%M:%S')
+                        sell[(w,date)]+=1
+                        txt = f'Sell: {symbols[w]} ({w}) on {date}'
+                        self._markdown_css(txt,font_size=14,color='green',height=17,position='left',placeholder=True)
                         time.sleep(0.1)
-                        st.write(f'Sell: {symbols[w]} ({w}) on {date}')
-        
-    
+            i+=1
+            bar.progress(i/len(comments))
+        return buy,sell
+
+    def _trade_summary(self, buy, sell):
+        with open('context/symbols_dict.pickle','rb') as f:
+            symbols = pickle.load(f)
+        trades = len(buy)+len(sell)
+        if st.checkbox('Show trades'):
+            col1,col2 = st.columns(2)
+            for w,date in buy:
+                txt = f'Buy: {symbols[w]} ({w}) on {date}'
+                self._markdown_css(txt,font_size=14,height=17,color='green',position='left',col=col1)
+            for w,date in sell:
+                txt = f'Sell: {symbols[w]} ({w}) on {date}'
+                self._markdown_css(txt,font_size=14,height=17,color='red',position='right',col=col2)
+
     def _nltk_sentiment(self, text: str):
         sia = SentimentIntensityAnalyzer()
         sub_entries_nltk = {'negative': 0, 'positive' : 0, 'neutral' : 0}
@@ -255,7 +284,7 @@ class trade(Page):
             return 'Neutral'
 
     def _within_time_interval(self, reddit_obj: praw.models, start:datetime, end: datetime):
-        utc_time = datetime.utcfromtimestamp(reddit_obj.created_utc).strftime('%Y-%m-%d') 
+        utc_time = datetime.utcfromtimestamp(reddit_obj.created_utc).strftime('%Y-%m-%d')
         datetime_time = pd.to_datetime(utc_time)
         if datetime_time < start or datetime_time > end:
             return False
@@ -272,7 +301,15 @@ class trade(Page):
         pressed = st.button(f'{txt}', on_click = on_click, args = args)
         return pressed
 
-
+    def _markdown_css(self,txt:str, font_size:int, color:str, height:int = 100, position:str = 'center',col:int = 1, placeholder: bool = False) -> None:
+        css_txt = f'<p style="font-family:sans-serif;color:{color};font-size: {font_size}px;text-align:{position};line-height: {height}px;"> {txt} </p>'
+        if not placeholder:
+            if col==1:
+                st.markdown(css_txt, unsafe_allow_html=True)
+            else:
+                col.markdown(css_txt, unsafe_allow_html=True)
+        else:
+            self.placeholder.markdown(css_txt, unsafe_allow_html=True)
         # # save comments
         # st.write(len(comments))
         # st.write(len(submissions))
