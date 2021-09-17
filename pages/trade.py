@@ -235,13 +235,13 @@ class trade(Page):
                         date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d %H:%M:%S')
                         buy[(w,date)]+=1
                         txt = f'Buy: {symbols[w]} ({w}) on {date}'
-                        self._markdown_css(txt,font_size=14,color='red',height=17,position='left',placeholder=True)
+                        self._markdown_css(txt,font_size=14,color='green',height=17,position='left',placeholder=True)
                         time.sleep(0.1)
                     elif sentiment=='Negative':
                         date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d %H:%M:%S')
                         sell[(w,date)]+=1
                         txt = f'Sell: {symbols[w]} ({w}) on {date}'
-                        self._markdown_css(txt,font_size=14,color='green',height=17,position='left',placeholder=True)
+                        self._markdown_css(txt,font_size=14,color='red',height=17,position='left',placeholder=True)
                         time.sleep(0.1)
             i+=1
             bar.progress(i/len(comments))
