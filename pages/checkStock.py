@@ -178,12 +178,11 @@ class checkStock(Page):
                 st.table(data)
             else:
                 st.dataframe(data)
-            download=self._click_button('Download')
+            download=self._click_button('Download csv')
             if download:
-                st.write('Download Started!')
                 csv = data.to_csv(index=False)
                 b64 = base64.b64encode(csv.encode()).decode()  # some strings
-                linko= f'<a href="data:file/csv;base64,{b64}" download="{ticker}.csv">Download csv file</a>'
+                linko= f'<a href="data:file/csv;base64,{b64}" download="{ticker}.csv">Click to download </a>'
                 st.markdown(linko, unsafe_allow_html=True)
 
     # Display statistics

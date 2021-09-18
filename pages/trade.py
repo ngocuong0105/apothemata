@@ -87,7 +87,7 @@ class trade(Page):
             user_input = self._reddit_user_input()
             pressed = self._click_button('Build Strategy')
             # init current running session
-            if len(st.session_state)==0:
+            if 'current_session' not in st.session_state:
                 st.session_state['current_session'] = ('building_strategy',None) # name,data
             if st.session_state['current_session'][0]=='building_strategy':
                 if pressed and 'r/' in subreddit[:2]:
