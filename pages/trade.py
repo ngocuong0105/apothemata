@@ -291,14 +291,13 @@ class trade(Page):
         return True
 
     def _click_button(self, txt:str, on_click = None, args = None):
-        st.markdown("""
-            <style>
-            div.stButton > button:first-child {
-                background-color: #F63366;
-                text-align:center;
-            }
-            </style>""", unsafe_allow_html=True)
+        back_color = st.get_option('theme.primaryColor')
+        placeholder = st.empty()
+        placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
         pressed = st.button(f'{txt}', on_click = on_click, args = args)
+        if pressed:
+            back_color = st.get_option('theme.textColor')
+            placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
         return pressed
 
     def _markdown_css(self,txt:str, font_size:int, color:str, height:int = 100, position:str = 'center',col:int = 1, placeholder: bool = False) -> None:

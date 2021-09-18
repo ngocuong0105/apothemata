@@ -1,7 +1,7 @@
 import plotly.graph_objects as go
 import streamlit as st
 import pandas as pd 
-import requests
+import base64
 from fuzzywuzzy import process
 import time
 import json
@@ -178,6 +178,13 @@ class checkStock(Page):
                 st.table(data)
             else:
                 st.dataframe(data)
+            download=self._click_button('Download')
+            if download:
+                st.write('Download Started!')
+                csv = data.to_csv(index=False)
+                b64 = base64.b64encode(csv.encode()).decode()  # some strings
+                linko= f'<a href="data:file/csv;base64,{b64}" download="{ticker}.csv">Download csv file</a>'
+                st.markdown(linko, unsafe_allow_html=True)
 
     # Display statistics
     def show_stats(self, data:pd.DataFrame, ticker:str):
@@ -191,6 +198,16 @@ class checkStock(Page):
             with open('./context/market_hours.txt','r') as f:
                 s = f.read()
             st.write(s)
+
+    def _click_button(self, txt:str, on_click = None, args = None):
+        back_color = st.get_option('theme.primaryColor')
+        placeholder = st.empty()
+        placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
+        pressed = st.button(f'{txt}', on_click = on_click, args = args)
+        if pressed:
+            back_color = st.get_option('theme.textColor')
+            placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
+        return pressed
 
 DEFAULT_LAYOUT = dict(
     xaxis=dict(
