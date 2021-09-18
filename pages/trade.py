@@ -309,12 +309,4 @@ class trade(Page):
                 col.markdown(css_txt, unsafe_allow_html=True)
         else:
             self.placeholder.markdown(css_txt, unsafe_allow_html=True)
-        # # save comments
-        # st.write(len(comments))
-        # st.write(len(submissions))
-        # import pickle
-        # with open('comments.pickle', 'wb') as f:
-        #     pickle.dump(comments, f)
-        # with open('submissions.pickle', 'wb') as f1:
-        #     pickle.dump(submissions, f1)
-    
+        
