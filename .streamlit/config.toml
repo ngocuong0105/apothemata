@@ -199,7 +199,7 @@ primaryColor='#F63366'
 # primaryColor="#F63366"
 
 # # # Background color for the main content area
-# backgroundColor="#f0f0f5"
+backgroundColor="black"
 
 # # # Background color for sidebar and most interactive widgets
 # secondaryBackgroundColor="#020208"

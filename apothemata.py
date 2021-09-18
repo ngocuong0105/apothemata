@@ -49,3 +49,7 @@ app.run()
 # start='2021-08-13' 
 # end='2021-08-14'
 # df_price = msft.history(period='7d',interval='1m')
+
+
+# BUG FIX
+# DEVELOP SESSION OBJECT

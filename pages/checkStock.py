@@ -198,13 +198,13 @@ class checkStock(Page):
                 s = f.read()
             st.write(s)
 
-    def _click_button(self, txt:str, on_click = None, args = None):
+    def _click_button(self, txt:str, on_click = None, args = None, pressed: bool=False):
         back_color = st.get_option('theme.primaryColor')
         placeholder = st.empty()
         placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
         pressed = st.button(f'{txt}', on_click = on_click, args = args)
         if pressed:
-            back_color = st.get_option('theme.textColor')
+            back_color = st.get_option('theme.backgroundColor')
             placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
         return pressed
 

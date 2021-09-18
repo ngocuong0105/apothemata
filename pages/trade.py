@@ -14,6 +14,7 @@ from datetime import datetime
 import pickle
 
 from page import Page
+from session import st_session
 
 class trade(Page):
     def __init__(self, title: str) -> None:
@@ -83,38 +84,57 @@ class trade(Page):
             subreddit = subreddit.strip() # remove trailing spaces
             if subreddit == '':
                 return
+            txt = 'Lets build our trading strategy'
+            self._markdown_css(txt,25,f'{st.get_option("theme.primaryColor")}',position='left')
 
-            user_input = self._reddit_user_input()
-            pressed = self._click_button('Build Strategy')
+
+
             # init current running session
             if 'current_session' not in st.session_state:
-                st.session_state['current_session'] = ('building_strategy',None) # name,data
-            if st.session_state['current_session'][0]=='building_strategy':
-                if pressed and 'r/' in subreddit[:2]:
+                st.session_state['current_session'] = ('start',None)
+
+            if st.session_state['current_session'][0]=='start':
+                user_input = self._reddit_user_input()
+                if self._click_button('Scrape Reddit posts'):
+                    st.session_state['current_session'] = ('load_data',user_input) # name,data
+            elif st.session_state['current_session'][0]=='load_data':
+                user_input = st.session_state['current_session'][1]
+                if 'r/' in subreddit[:2]:
                     comments = self._load_reddit_data(subreddit[2:],user_input)
-                    st.session_state['current_session'] = ('trading',comments)
-                    self._click_button('YOLO start trading!')
-                elif pressed:
+                    st.session_state['current_session'] = ('building_strategy',comments)
+                    st.session_state['current_session'] = ('input_for_strategy',comments)
+                else:
                     comments = self._load_reddit_data(subreddit, user_input)
-                    st.session_state['current_session'] = ('trading',comments)
-                    self._click_button('YOLO start trading!')
+                    st.session_state['current_session'] = ('input_for_strategy',comments)
+                if st.session_state['current_session'][0]=='input_for_strategy':
+                    comments = st.session_state['current_session'][1]
+                    strategy_parameters = self._user_strategy_paramenters()
+                    st.session_state['current_session'] = ('building_strategy',(comments,strategy_parameters))
+                    self._click_button('Build strategy')
+                    
+            elif st.session_state['current_session'][0]=='building_strategy':
+                comments,parameters = st.session_state['current_session'][1]
+                analysed_comments = self._build_strategy(comments,parameters) 
+                st.session_state['current_session'] = ('trading',analysed_comments)
+                self._click_button('Start YOLO trading!')
+
             elif st.session_state['current_session'][0]=='trading':
-                buy,sell = self._YOLO_trade(st.session_state['current_session'][1]) # takes data from prev session
+                analysed_comments = st.session_state['current_session'][1]
+                buy,sell = self._YOLO_trade(analysed_comments) 
                 st.session_state['current_session'] = ('display_trading_summary',(buy,sell))
-                self._click_button('Generate trading summary.')
+                self._click_button('Generate trading summary')
             elif st.session_state['current_session'][0] == 'display_trading_summary':
+                st.balloons()
                 buy,sell = st.session_state['current_session'][1]
                 self._trade_summary(buy,sell)
 
         elif risk_type == 'Lets go to the moon!':
             st.write('💰🤑💰 Superb... Armstrong will be your surname!')
 
+    
     def _reddit_user_input(self) -> tuple:
-        txt = 'Lets build your trading strategy'
-        self._markdown_css(txt,25,'#F63366')
-
-        txt = 'We will scrape through popular reddit posts and execute trades based on users sentiment'
-        self._markdown_css(txt,14,'white', height=17, position='left')
+        txt = 'First we scrape through popular reddit posts.'
+        self._markdown_css(txt,16,f'{st.get_option("theme.primaryColor")}', height=17, position='left')
 
         start = pd.to_datetime(st.text_input('Select start date', '2021-09-01'))
         end = pd.to_datetime(st.text_input('Select end date', '2021-09-15'))
@@ -177,7 +197,7 @@ class trade(Page):
                 break
             submissions.append(r_submission)
             num_subs -= 1
-            sub_placeholder.text(f'Scraping submission: "{r_submission.title}"')
+            sub_placeholder.text(f'Scraping post: "{r_submission.title}"')
 
             # handle More Comments tabs
             r_submission.comments.replace_more(limit=0)
@@ -212,12 +232,40 @@ class trade(Page):
         comments.sort(key = lambda x: x.score, reverse = True)
         sub_placeholder.empty()
         com_placeholder.empty()
-        st.write('Scraping submissions is done!')
+        txt = 'Scraping reddit posts is done.'
+        self._markdown_css(txt,16,f'{st.get_option("theme.primaryColor")}', height=17, position='left')
         return comments
 
-    def _YOLO_trade(self, comments: 'list[praw.models.Comment]') -> 'tuple[dict]':
-        buy = collections.defaultdict(int)
-        sell = collections.defaultdict(int)
+    def _user_strategy_paramenters(self):
+        txt = 'Next we select parameters for our trading strategy.'
+        self._markdown_css(txt,16,f'{st.get_option("theme.primaryColor")}', height=17, position='left')
+        stop_loss = st.number_input("Select stop loss percentage", value = 10, step=1)
+        stop_gain = st.number_input("Select stop gain percentage", value = 10, step=1)
+        return stop_loss,stop_gain
+
+    def _build_strategy(self, comments: 'list[praw.models.Comment]', parameters:tuple):
+        txt = 'Now we can build our trading strategy by using sentiment analysis on reddit posts/commments/replies.'
+        self._markdown_css(txt,16,f'{st.get_option("theme.primaryColor")}', height=17, position='left')
+        with open('context/symbols_dict.pickle','rb') as f:
+            symbols = pickle.load(f)
+        # dislpay sentiment
+        self.placeholder = st.empty()
+        bar = st.progress(0)
+        i = 0
+        analysed_comments = []
+        for com in comments:
+            sentiment = self._nltk_sentiment(com.body)
+            analysed_comments.append((com,sentiment))
+            txt = f'{com.body}'
+            self._markdown_css(txt,font_size=14,color='green',height=17,position='left',placeholder=True)
+            i+=1
+            bar.progress(i/len(comments))
+        txt = 'Your strategy is built.'
+        self._markdown_css(f'{txt}',20,f'{st.get_option("theme.primaryColor")}',height=17,position='left')
+        return analysed_comments
+
+    def _YOLO_trade(self, analysed_comments: 'list[tuple[praw.models.Comment,str]]') -> 'tuple[list]':
+        buy,sell = [],[]
         with open('context/symbols_dict.pickle','rb') as f:
             symbols = pickle.load(f)
         
@@ -226,25 +274,26 @@ class trade(Page):
         bar = st.progress(0)
         i = 0
         # sentiment analysis for each comment
-        for com in comments:
+        for com,sentiment in analysed_comments:
             words = re.split("\s|(?<!\d)[,.](?!\d)", com.body)
             for w in words:
                 if w in symbols:
-                    sentiment = self._nltk_sentiment(com.body)
                     if sentiment=='Positive':
                         date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d %H:%M:%S')
-                        buy[(w,date)]+=1
+                        buy.append((w,date))
                         txt = f'Buy: {symbols[w]} ({w}) on {date}'
                         self._markdown_css(txt,font_size=14,color='green',height=17,position='left',placeholder=True)
                         time.sleep(0.1)
                     elif sentiment=='Negative':
                         date = datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d %H:%M:%S')
-                        sell[(w,date)]+=1
+                        sell.append((w,date))
                         txt = f'Sell: {symbols[w]} ({w}) on {date}'
                         self._markdown_css(txt,font_size=14,color='red',height=17,position='left',placeholder=True)
                         time.sleep(0.1)
             i+=1
-            bar.progress(i/len(comments))
+            bar.progress(i/len(analysed_comments))
+        buy.sort(key=lambda x:x[1])
+        sell.sort(key=lambda x:x[1])
         return buy,sell
 
     def _trade_summary(self, buy, sell):
@@ -290,15 +339,16 @@ class trade(Page):
             return False
         return True
 
-    def _click_button(self, txt:str, on_click = None, args = None):
-        back_color = st.get_option('theme.primaryColor')
-        placeholder = st.empty()
-        placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
-        pressed = st.button(f'{txt}', on_click = on_click, args = args)
-        if pressed:
-            back_color = st.get_option('theme.textColor')
-            placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
-        return pressed
+    def _click_button(self, txt:str, on_click = None, args = None, override_pressed:bool = False):
+        if not override_pressed:
+            back_color = st.get_option('theme.primaryColor')
+            st.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
+            pressed = st.button(f'{txt}', on_click = on_click, args = args)
+            if pressed:
+                back_color = st.get_option('theme.backgroundColor')
+                st.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
+            return pressed
+        return self._click_button(txt)
 
     def _markdown_css(self,txt:str, font_size:int, color:str, height:int = 100, position:str = 'center',col:int = 1, placeholder: bool = False) -> None:
         css_txt = f'<p style="font-family:sans-serif;color:{color};font-size: {font_size}px;text-align:{position};line-height: {height}px;"> {txt} </p>'
