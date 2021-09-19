@@ -1,1 +1,1 @@
-Check my [apothemata app](https://share.streamlit.io/ngocuong0105/stock_webapp/apothemata.py) for getting stock data.
+Check my [apothemata app](https://share.streamlit.io/ngocuong0105/apothemata/apothemata.py) trading stock based on Reddit posts.
