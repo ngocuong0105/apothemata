@@ -46,7 +46,7 @@ class home(Page):
                 font-size: 80px;
                 font-family: sans-serifed;
                 color: white;
-                background: repeating-linear-gradient(45deg, #faff8a 0%, #b6f5f0 25%, #d3ddff 50%, white 70%);
+                background: repeating-linear-gradient(45deg, #faff8a 0%, #b6f5f0 20%, #d3ddff 40%,#F63366 60%, white 80%);
                 background-size: 700vw 700vw;
                 -webkit-text-fill-color: transparent;
                 -webkit-background-clip: text;
@@ -65,8 +65,8 @@ class home(Page):
                 text-align: center;
                 font-size: 25px;
                 font-family: sans-serifed;
-                background: repeating-linear-gradient(45deg, #faff8a 0%, #b6f5f0 25%, #d3ddff 50%, white 70%);
-                background-size: 600vw 600vw;
+                background: repeating-linear-gradient(45deg, #faff8a 0%, #b6f5f0 20%, #d3ddff 40%,#F63366 60%, white 80%);
+                background-size: 700vw 700vw;
                 -webkit-text-fill-color: transparent;
                 -webkit-background-clip: text;
                 animation: slide 10s linear infinite forwards;

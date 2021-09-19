@@ -50,30 +50,30 @@ class trade(Page):
     def reddit_strategy(self):
 
         # Choosing risk appetite
-        options =  ['I want to make a risk-averse long term investment.',
-                    'I want to protect my savings from inflation.',
-                    'I have diamond hands!',
-                    'Lets go to the moon!',
+        options =  ['🏦 I want to make a risk-averse long term investment.',
+                    '📈 I want to protect my savings from inflation.',
+                    '🙌 I have diamond hands!',
+                    '🚀 Lets go to the moon!',
                     '']
-        risk_type = st.selectbox('What is your risk appetite?', options, index = len(options)-1)
+        risk_type = st.selectbox('What is your risk profile?', options, index = len(options)-1)
 
-        if risk_type == 'I want to make a risk-averse long term investment.':
+        if risk_type == '🏦 I want to make a risk-averse long term investment.':
             if click_button('Find strategy'):
                 seconds = randint(5,10)
                 txt = 'Searching for trading strategy...'
                 wait_message(txt,seconds)
                 txt = '😬 Risk-averse, really? Sorry you are using the wrong Web App.'
                 markdown_css(txt,20,self.white,height=200,position='center')
-        elif risk_type == 'I want to protect my savings from inflation.':
+        elif risk_type == '📈 I want to protect my savings from inflation.':
             if click_button('Find strategy'):
                 seconds = randint(5,10)
                 txt = 'Searching for trading strategy...'
                 wait_message(txt,seconds)
                 txt = '🙄 Strategy not available. Who cares about savings? Here we play big - win big!'
                 markdown_css(txt,20,self.white,height=200,position='center')
-        elif risk_type == 'I have diamond hands!':
+        elif risk_type == '🙌 I have diamond hands!':
             self.diamond_hands()
-        elif risk_type == 'Lets go to the moon!':
+        elif risk_type == '🚀 Lets go to the moon!':
             # txt = '💰🤑💰 Superb... Armstrong will be your surname!'
             # markdown_css(txt,self.text_size,self.white)
             st.caption('Under developement, stay tuned!')
@@ -201,7 +201,7 @@ class trade(Page):
         options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other']
         subreddit = st.selectbox('Select your favourite subreddit',options, index = 0)
         if subreddit == 'other':
-            subreddit = st.text_input('Choose subreddit (e.g r/subRedditName)')
+            subreddit = st.text_input('Choose subreddit (e.g r/subRedditName, subRedditName)')
         subreddit = subreddit.strip() # remove trailing spaces
     
         # select start-end dates
@@ -378,9 +378,20 @@ class trade(Page):
     def _trade_summary(self, buy, sell):
         with open('context/symbols_dict.pickle','rb') as f:
             symbols = pickle.load(f)
-        trades = len(buy)+len(sell)
-        txt = f'Total number of trades: {trades}'
-        markdown_css(txt,self.text_size,self.white)
+        with open('buy.pickle', 'wb') as f1:
+            pickle.dump(buy, f1)
+        with open('sell.pickle', 'wb') as f1:
+            pickle.dump(sell, f1)
+        if st.checkbox('Summary',value=False):
+            bought,sold = len(buy),len(sell)
+            trades = bought+sold
+            txt = f'Total number of trades: {trades}'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'Bought stock {bought} times'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'Sold stock {sold} times'
+            markdown_css(txt,self.text_size,self.white)
+
         if st.checkbox('Show trades'):
             col1,col2 = st.columns(2)
             for w,date in buy:

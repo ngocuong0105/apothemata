@@ -40,7 +40,9 @@ class checkStock(Page):
         self.plot(data, time_col, ticker, company_name)
         self.show_data(data, ticker)
         self.show_stats(data, ticker)
+        self.show_info(ticker)
         self.show_trading_hours()
+
 
     def _filter_loaded_data(self, data:pd.DataFrame, start:str, end:str):
         if len(data) == 0:
@@ -163,6 +165,7 @@ class checkStock(Page):
         fig = go.Figure(
             layout=DEFAULT_LAYOUT
         )
+        fig.update_layout(title=f'{", ".join(value_cols)}')
         for forecast_col in value_cols:
             fig.add_scatter(
                 x=data[time_col],
@@ -172,12 +175,13 @@ class checkStock(Page):
 
         if value_cols!=[]:
             st.subheader(f'Company name: {company_name}')
-            st.write(f'Plotted: {", ".join(value_cols)}')
+            st.write(f'Sector: {yf.Ticker(ticker).info["sector"]}')
+            # st.write(f'Plotted: {", ".join(value_cols)}')
             st.plotly_chart(fig, use_container_width=True)
 
     # Display dataframe
     def show_data(self, data:pd.DataFrame, ticker:str):
-        if st.checkbox('Show data'):
+        if st.checkbox('Data',value=True):
             st.subheader(f'{ticker}')
             if len(data)<50:
                 st.table(data)
@@ -192,16 +196,31 @@ class checkStock(Page):
 
     # Display statistics
     def show_stats(self, data:pd.DataFrame, ticker:str):
-        if st.checkbox('Show statistics'):
+        if st.checkbox('Statistics'):
             st.subheader(f'{ticker} Statistics')
             st.write(data.describe())
 
     # Display trading hours
     def show_trading_hours(self):
-        if st.checkbox('Show market hours'):
+        if st.checkbox('Market hours'):
             with open('./context/market_hours.txt','r') as f:
                 s = f.read()
             st.write(s)
+
+    # Display ticker info
+    def show_info(self, ticker:str):
+        ticker = yf.Ticker(ticker)
+        pd.set_option('display.float_format', lambda x: '%.0f' % x)
+        if st.checkbox('Company info'):
+            st.write(ticker.info['longBusinessSummary'])
+        if st.checkbox('Yearly balance sheet'):
+            st.write(ticker.balance_sheet)
+        if st.checkbox('Quarterly balance sheet'):
+            st.write(ticker.quarterly_balance_sheet)
+        if st.checkbox('Yearly earnings'):
+            st.write(ticker.earnings)
+        if st.checkbox('Quarterly earnings'):
+            st.write(ticker.quarterly_earnings)
 
     def _click_button(self, txt:str, on_click = None, args = None, pressed: bool=False):
         back_color = st.get_option('theme.primaryColor')
