@@ -1,5 +1,4 @@
 import praw
-from prawcore.sessions import session
 import streamlit as st
 from collections import deque
 from random import randint
@@ -37,7 +36,7 @@ class trade(Page):
             pressed = click_button('Find strategy')
             if pressed:
                 seconds = randint(5,10)
-                wait_message(seconds)
+                wait_message('Searching for trading strategy...',seconds)
                 txt = '🤪 No strategy found. We are sorry you are retarded.'
                 markdown_css(txt,20,self.white,height=200,position='center')
 
@@ -73,10 +72,18 @@ class trade(Page):
                 txt = '🙄 Strategy not available. Who cares about savings? Here we play big - win big!'
                 markdown_css(txt,20,self.white,height=200,position='center')
         elif risk_type == 'I have diamond hands!':
+            self.diamond_hands()
+        elif risk_type == 'Lets go to the moon!':
+            # txt = '💰🤑💰 Superb... Armstrong will be your surname!'
+            # markdown_css(txt,self.text_size,self.white)
+            st.caption('Under developement, stay tuned!')
+
+    def diamond_hands(self):
             txt = '💎 Great! Holding meme stonks is in your nature.'
             markdown_css(txt,self.text_size,self.white)
 
             # Building strategy
+            st.write('')# empty line
             txt = 'Lets build your trading strategy'
             markdown_css(txt,25,f'{st.get_option("theme.primaryColor")}')
             
@@ -148,7 +155,7 @@ class trade(Page):
                 self._steps_description(0,0,1,0,0)
                 analysed_comments = st.session_state['current_session'][1]
                 st.session_state['current_session'] = ('trading',analysed_comments)
-                txt = 'Sentiment of top 10 comments with highest score (red is negative,green is positive,yellow is neutral):'
+                txt = 'Sentiment of top 10 comments with highest score (red is negative, green is positive, yellow is neutral):'
                 markdown_css(txt,self.text_size,self.white)
                 for i in range(10):
                     com,sentiment = analysed_comments[i]
@@ -188,10 +195,6 @@ class trade(Page):
                     del st.session_state['current_session']
                     st.experimental_rerun()
                 st.caption('Please click finished if you want to build another strategy.')
-        elif risk_type == 'Lets go to the moon!':
-            # txt = '💰🤑💰 Superb... Armstrong will be your surname!'
-            # markdown_css(txt,self.text_size,self.white)
-            st.caption('Under developement, stay tuned!')
 
     def _reddit_user_input(self) -> tuple:
         # select subreddit
@@ -322,8 +325,9 @@ class trade(Page):
         for com in comments:
             sentiment = self._nltk_sentiment(com.body)
             analysed_comments.append((com,sentiment))
-            if len(com.body)>80:
-                txt = f'Comment: {com.body[:88]} ...'
+            if len(com.body)>88:
+                combody = com.body[:88].replace('\n','')
+                txt = f'Comment: {combody} ...'
             else:
                 txt = f'Comment: {com.body}'
             if sentiment==1:
@@ -335,7 +339,6 @@ class trade(Page):
             self._markdown_css(txt,self.text_size,color,placeholder=True)
             i+=1
             bar.progress(i/len(comments))
-            time.sleep(0.01)
         self.placeholder = st.empty()
         return analysed_comments
 

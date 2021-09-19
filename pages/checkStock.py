@@ -8,6 +8,8 @@ import json
 from alpha_vantage.timeseries import TimeSeries
 import yfinance as yf
 import pickle
+import datetime
+
 from page import Page
 
 class checkStock(Page):
@@ -120,8 +122,11 @@ class checkStock(Page):
         # User input
         st.sidebar.header('Please provide input:')
         source = st.sidebar.selectbox('Select data source', ['Yahoo Finance', 'Alpha Vantage (free license)'], key = 'data_source')
-        start_date = st.sidebar.text_input('Start Date', '2020-01-01')
-        end_date = st.sidebar.text_input('End Date', '2021-08-12')
+        yesterday = datetime.date.today() - datetime.timedelta(days=1)
+        s = (yesterday - datetime.timedelta(days=365)).strftime('%Y-%m-%d')
+        e = yesterday.strftime('%Y-%m-%d')
+        start_date = st.sidebar.text_input('Start Date', f'{s}')
+        end_date = st.sidebar.text_input('End Date', f'{e}')
         
         keywords = [keyword for keyword in st.sidebar.text_input(\
                                             'Search Ticker (comma separated keywords)',\
