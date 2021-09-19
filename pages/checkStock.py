@@ -125,7 +125,7 @@ class checkStock(Page):
         
         keywords = [keyword for keyword in st.sidebar.text_input(\
                                             'Search Ticker (comma separated keywords)',\
-                                            'google, tesla').split(',') 
+                                            'GME, tesla').split(',') 
                                             if keyword !='']
         if keywords == []:
             st.write('Please search ticker')

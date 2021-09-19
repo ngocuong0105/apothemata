@@ -12,7 +12,7 @@ st.set_page_config(page_title='Apothemata',\
 app = MultiPage()
 home = pages.home(title = 'Home')
 checkStock = pages.checkStock(title = 'Check your stocks')
-trade = pages.trade(title = 'Trade')
+trade = pages.trade(title = 'Yolo trade')
 
 # Add all your application here
 app.add_page(home)
