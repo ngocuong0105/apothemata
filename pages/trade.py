@@ -12,6 +12,7 @@ import datetime
 import pickle
 import yfinance as yf
 import plotly.express as px
+import base64
 
 from page import Page
 from utils import markdown_css, click_button, wait_message
@@ -154,7 +155,7 @@ class trade(Page):
             comments,strategy_parameters = st.session_state['current_session'][1]
             analysed_comments = self.analyse_comments(comments)
             st.session_state['current_session'] = ('top10_comments_sentiment',(analysed_comments,strategy_parameters))
-            txt = f'All posts and comments are analysed. Number of comments considers is {len(comments)}.'
+            txt = f'All posts and comments are analysed. Number of comments considered is {len(comments)}.'
             markdown_css(f'{txt}',self.text_size,self.white)
             click_button('Next')
         elif st.session_state['current_session'][0]=='top10_comments_sentiment':
@@ -369,7 +370,7 @@ class trade(Page):
 
         # open positions based on sentiment
         # dislpay trades
-        txt = 'Openning trading positions'
+        txt = 'Opening trading positions'
         self._markdown_css(txt,self.text_size,self.white)
         self.placeholder = st.empty()
         bar = st.progress(0)
@@ -399,12 +400,11 @@ class trade(Page):
         # dislpay trades
         denom = len(buy)+len(sell)
         txt = 'Closing trading positions'
+        self._markdown_css(txt,self.text_size,self.white)
         self.placeholder = st.empty()
         bar = st.progress(0)
         i = 0
         denom = len(buy)+len(sell)
-        txt = 'Closing trading positions'
-        self._markdown_css(txt,self.text_size,self.white)
         symbols = self._get_symbols()
         buy_deals,sell_deals = [],[]
         for ticker,start in buy:
@@ -438,10 +438,10 @@ class trade(Page):
         df_sell_deals['profit'] = df_sell_deals['open']-df_sell_deals['close']
         df_buy_deals.sort_values(by=['ticker','open_time'],inplace = True)
         df_sell_deals.sort_values(by=['ticker','open_time'],inplace = True)
+        df_buy_deals['volume'],df_sell_deals['volume'] = 1,1
         return df_buy_deals,df_sell_deals
 
     def trade_summary(self, df_buy_deals:pd.DataFrame, df_sell_deals:pd.DataFrame):
-       
         df_buy_grouped = df_buy_deals.groupby('ticker')['profit'].sum().reset_index()
         df_sell_grouped = df_sell_deals.groupby('ticker')['profit'].sum().reset_index()
         df_grouped = pd.concat([df_buy_grouped,df_sell_grouped]).groupby('ticker')['profit'].sum().reset_index()
@@ -487,18 +487,14 @@ class trade(Page):
 
         # long/short volumes
         if st.checkbox('Long deals volumes'):
-            df_buy_volumes = df_buy_deals
-            df_buy_volumes['volume'] = 1
-            df_buy_volumes = df_buy_volumes.groupby('ticker')['volume'].sum().reset_index()
-            fig = px.bar(df_buy_volumes, x='ticker', y='volume',\
+            df_buy_volumes = df_buy_deals.groupby('ticker')['volume'].sum().reset_index()
+            fig = px.bar(df_buy_deals, x='ticker', y='volume',\
                     color='volume',height=500,\
                     title='Long deals')
             st.plotly_chart(fig, use_container_width=True)
 
         if st.checkbox('Short deals volumes'):
-            df_sell_volumes = df_sell_deals
-            df_sell_volumes['volume'] = 1
-            df_sell_volumes = df_sell_volumes.groupby('ticker')['volume'].sum().reset_index()
+            df_sell_volumes = df_sell_deals.groupby('ticker')['volume'].sum().reset_index()
             fig = px.bar(df_sell_volumes, x='ticker', y='volume',\
                     color='volume',height=500,\
                     title='Long deals')
@@ -507,8 +503,21 @@ class trade(Page):
         # long/short deals data
         if st.checkbox('Show long deals data'):
             st.write(df_buy_deals)
+            download=click_button('Download csv')
+            if download:
+                csv = df_buy_deals.to_csv(index=False)
+                b64 = base64.b64encode(csv.encode()).decode()  # some strings
+                linko= f'<a href="data:file/csv;base64,{b64}" download="long_deals.csv">Click to download </a>'
+                st.markdown(linko, unsafe_allow_html=True)
         if st.checkbox('Show short deals data'):
             st.write(df_sell_deals)
+            download=click_button('Download csv')
+            if download:
+                csv = df_sell_deals.to_csv(index=False)
+                b64 = base64.b64encode(csv.encode()).decode()  # some strings
+                linko= f'<a href="data:file/csv;base64,{b64}" download="short_deals.csv">Click to download </a>'
+                st.markdown(linko, unsafe_allow_html=True)
+            
 
         if st.checkbox('Show trades'):
             symbols = self._get_symbols()
