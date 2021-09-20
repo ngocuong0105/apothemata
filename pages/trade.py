@@ -140,7 +140,6 @@ class trade(Page):
             st.session_state['current_session'] = ('top10_comments',(comments,strategy_parameters))
             txt = f'Scraping reddit posts is done.'
             markdown_css(txt,self.text_size,self.white)
-
             click_button('Next')
 
         # top 10 comments by score
