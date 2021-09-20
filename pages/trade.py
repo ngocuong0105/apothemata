@@ -10,6 +10,8 @@ nltk.download('vader_lexicon', quiet = True)
 from nltk.sentiment.vader import SentimentIntensityAnalyzer
 import datetime
 import pickle
+import yfinance as yf
+import plotly.express as px
 
 from page import Page
 from utils import markdown_css, click_button, wait_message
@@ -30,7 +32,7 @@ class trade(Page):
             self.reddit_strategy()
         elif strategy == '💬 Tweet It!':
             st.header(f'{strategy}')
-            st.caption('Under developement, stay tuned!')
+            st.caption('Under development, stay tuned!')
         elif strategy == '🇺🇸 I believe Fox News':
             st.header(f'{strategy}')
             pressed = click_button('Find strategy')
@@ -46,12 +48,11 @@ class trade(Page):
         strategy = st.sidebar.selectbox('Select trading strategy',options, index = len(options)-1)
         return strategy
 
-
     def reddit_strategy(self):
 
         # Choosing risk appetite
         options =  ['🏦 I want to make a risk-averse long term investment.',
-                    '📈 I want to protect my savings from inflation.',
+                    # '📈 I want to protect my savings from inflation.',
                     '🙌 I have diamond hands!',
                     '🚀 Lets go to the moon!',
                     '']
@@ -76,127 +77,146 @@ class trade(Page):
         elif risk_type == '🚀 Lets go to the moon!':
             # txt = '💰🤑💰 Superb... Armstrong will be your surname!'
             # markdown_css(txt,self.text_size,self.white)
-            st.caption('Under developement, stay tuned!')
+            st.caption('Under development, stay tuned!')
 
     def diamond_hands(self):
-            txt = '💎 Great! Holding meme stonks is in your nature.'
+        txt = '💎 Great! Holding meme stonks is in your nature.'
+        markdown_css(txt,self.text_size,self.white)
+
+        # Building strategy
+        st.write('')# empty line
+        txt = 'Lets build your trading strategy'
+        markdown_css(txt,25,f'{st.get_option("theme.primaryColor")}')
+        
+        # initialize current running session
+        if 'current_session' not in st.session_state:
+            st.session_state['current_session'] = ('start',None)
+            txt = 'The workflow is simple and takes up to 9 minutes following these steps:'
+            markdown_css(txt,self.text_size,f'{st.get_option("theme.primaryColor")}')
+            self._steps_description(1,1,1,1,1)
+            click_button('Start')
+
+        elif st.session_state['current_session'][0]=='start':
+            self._steps_description(1,0,0,0,0)
+            strategy_parameters = self.user_strategy_paramenters()
+            if click_button('Set parameters'):
+                st.session_state['current_session'] = ('input_for_strategy',strategy_parameters)
+                st.experimental_rerun()
+
+        elif st.session_state['current_session'][0]=='input_for_strategy':
+            self._steps_description(1,0,0,0,0)
+            strategy_parameters = st.session_state['current_session'][1]
+            txt = 'Parameters set:'
+            markdown_css(txt,self.text_size,self.white)
+            if strategy_parameters[0]!=101:
+                txt = f'① Stop loss is {strategy_parameters[-2]}%'
+            else:
+                txt = f'① Stop loss is disabled'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'② Stop gain is {strategy_parameters[-1]}%'
+            markdown_css(txt,self.text_size,self.white)
+            st.session_state['current_session'] = ('input_for_reddit',strategy_parameters)
+            click_button('Next')
+
+        elif st.session_state['current_session'][0]=='input_for_reddit':
+            self._steps_description(0,1,0,0,0)
+            strategy_parameters = st.session_state['current_session'][1]
+            start_trade = strategy_parameters[0]
+            input_for_reddit = self.reddit_user_input(start_trade)
+            if click_button('Scrape Reddit posts'):
+                st.session_state['current_session'] = ('scrape_posts',(input_for_reddit,strategy_parameters))
+                st.experimental_rerun()
+
+        elif st.session_state['current_session'][0]=='scrape_posts':
+            self._steps_description(0,1,0,0,0)
+            input_for_reddit,strategy_parameters = st.session_state['current_session'][1]
+            comments = self.scrape_reddit_data(input_for_reddit)
+            st.session_state['current_session'] = ('top10_comments',(comments,strategy_parameters))
+            txt = f'Scraping reddit posts is done.'
             markdown_css(txt,self.text_size,self.white)
 
-            # Building strategy
-            st.write('')# empty line
-            txt = 'Lets build your trading strategy'
-            markdown_css(txt,25,f'{st.get_option("theme.primaryColor")}')
-            
-            # initialize current running session
-            if 'current_session' not in st.session_state:
-                st.session_state['current_session'] = ('start',None)
-                txt = 'The workflow is simple and takes up to 5 minutes following these steps:'
-                markdown_css(txt,self.text_size,f'{st.get_option("theme.primaryColor")}')
-                self._steps_description(1,1,1,1,1)
-                click_button('Start')
+            click_button('Next')
 
-            elif st.session_state['current_session'][0]=='start':
-                self._steps_description(1,0,0,0,0)
-                user_input = self._reddit_user_input()
-                if click_button('Scrape Reddit posts'):
-                    st.session_state['current_session'] = ('load_data',user_input)
-                    st.experimental_rerun()
-            elif st.session_state['current_session'][0]=='load_data':
-                self._steps_description(1,0,0,0,0)
-                user_input = st.session_state['current_session'][1]
-                comments = self._load_reddit_data(user_input)
-                st.session_state['current_session'] = ('building_strategy',comments)
-                st.session_state['current_session'] = ('input_for_strategy',comments)
-                txt = 'Scraping reddit posts is done.'
-                markdown_css(txt,self.text_size,self.white)
-                click_button('Next')
-            elif st.session_state['current_session'][0]=='input_for_strategy':
-                self._steps_description(0,1,0,0,0)
-                comments = st.session_state['current_session'][1]
-                strategy_parameters = self._user_strategy_paramenters()
-                if click_button('Set parameters'):
-                    st.session_state['current_session'] = ('before_building_strategy',(comments,strategy_parameters))
-                    st.experimental_rerun()
-            elif st.session_state['current_session'][0]=='before_building_strategy':
-                self._steps_description(0,1,0,0,0)
-                strategy_parameters = st.session_state['current_session'][1][1]
-                txt = 'Parameters set:'
-                markdown_css(txt,self.text_size,self.white)
-                if strategy_parameters[0]!=101:
-                    txt = f'① Stop loss is {strategy_parameters[0]}%'
+        elif st.session_state['current_session'][0]=='top10_comments':
+            self._steps_description(0,0,1,0,0)
+            comments,strategy_parameters = st.session_state['current_session'][1]
+            txt = 'Top 10 comments with highest score:'
+            markdown_css(txt,self.text_size,self.white)
+            for i in range(10):
+                c = comments[i]
+                txt = f'{i+1}. '+ c.body
+                txt = txt.replace("\n", "")
+                markdown_css(txt,self.text_size,self.white,height=20)
+            st.session_state['current_session'] = ('sentiment_analysis',(comments,strategy_parameters))
+            click_button('Analyse posts and comments')
+        elif st.session_state['current_session'][0] == 'sentiment_analysis':
+            self._steps_description(0,0,1,0,0)
+            comments,strategy_parameters = st.session_state['current_session'][1]
+            analysed_comments = self.analyse_comments(comments)
+            st.session_state['current_session'] = ('top10_comments_sentiment',(analysed_comments,strategy_parameters))
+            txt = f'All posts and comments are analysed. Number of comments considers is {len(comments)}.'
+            markdown_css(f'{txt}',self.text_size,self.white)
+            click_button('Next')
+        elif st.session_state['current_session'][0]=='top10_comments_sentiment':
+            self._steps_description(0,0,1,0,0)
+            analysed_comments,strategy_parameters = st.session_state['current_session'][1]
+            st.session_state['current_session'] = ('trading',(analysed_comments,strategy_parameters))
+            txt = 'Sentiment of top 10 comments with highest score (red is negative, green is positive, yellow is neutral):'
+            markdown_css(txt,self.text_size,self.white)
+            for i in range(10):
+                com,sentiment = analysed_comments[i]
+                if sentiment==1:
+                    color = self.green
+                elif sentiment==0:
+                    color = self.yellow
                 else:
-                    txt = f'① Stop loss is disabled'
-                markdown_css(txt,self.text_size,self.white)
-                txt = f'② Stop gain is {strategy_parameters[1]}%'
-                markdown_css(txt,self.text_size,self.white)
-                st.session_state['current_session'] = ('sentiment_analysis',st.session_state['current_session'][1])
-                click_button('Next')
-            elif st.session_state['current_session'][0]=='sentiment_analysis':
-                self._steps_description(0,0,1,0,0)
-                comments,parameters = st.session_state['current_session'][1]
-                txt = 'Top 10 comments with highest score:'
-                markdown_css(txt,self.text_size,self.white)
-                for i in range(10):
-                    c = comments[i]
-                    txt = f'{i+1}. '+ c.body
-                    txt = txt.replace("\n", "")
-                    markdown_css(txt,self.text_size,self.white,height=20)
-                st.session_state['current_session'] = ('sentiment_analysis1',st.session_state['current_session'][1])
-                click_button('Analyse posts and comments')
-            elif st.session_state['current_session'][0] == 'sentiment_analysis1':
-                self._steps_description(0,0,1,0,0)
-                comments,parameters = st.session_state['current_session'][1]
-                analysed_comments = self._analyse_comments(comments,parameters)
-                st.session_state['current_session'] = ('before_trading',analysed_comments)
-                txt = 'All posts and comments are analysed.'
-                markdown_css(f'{txt}',self.text_size,self.white)
-                click_button('Next')
-            elif st.session_state['current_session'][0]=='before_trading':
-                self._steps_description(0,0,1,0,0)
-                analysed_comments = st.session_state['current_session'][1]
-                st.session_state['current_session'] = ('trading',analysed_comments)
-                txt = 'Sentiment of top 10 comments with highest score (red is negative, green is positive, yellow is neutral):'
-                markdown_css(txt,self.text_size,self.white)
-                for i in range(10):
-                    com,sentiment = analysed_comments[i]
-                    if sentiment==1:
-                        color = self.green
-                    elif sentiment==0:
-                        color = self.yellow
-                    else:
-                        color = self.red
-                    txt = f'{i+1}. '+ com.body
-                    txt = txt.replace("\n", "")
-                    markdown_css(txt,self.text_size,color,height=20)
-                click_button('Start YOLO trading!')
-            elif st.session_state['current_session'][0]=='trading':
-                self._steps_description(0,0,0,1,0)
-                analysed_comments = st.session_state['current_session'][1]
-                buy,sell = self._YOLO_trade(analysed_comments) 
-                st.session_state['current_session'] = ('display_trading_summary_baloon',(buy,sell))
-                click_button('Trading summary')
-            elif st.session_state['current_session'][0] == 'display_trading_summary_baloon':
-                st.balloons()
-                self._steps_description(0,0,0,0,1)
-                buy,sell = st.session_state['current_session'][1]
-                self._trade_summary(buy,sell)
-                st.session_state['current_session'] = ('display_trading_summary',st.session_state['current_session'][1])
-                if click_button('Finished'):
-                    # add rate app
-                    del st.session_state['current_session']
-                    st.experimental_rerun()
-                st.caption('Please click finished if you want to build another strategy.')
-            elif st.session_state['current_session'][0] == 'display_trading_summary':
-                self._steps_description(0,0,0,0,1)
-                buy,sell = st.session_state['current_session'][1]
-                self._trade_summary(buy,sell)
-                if click_button('Finished'):
-                    # add rate app
-                    del st.session_state['current_session']
-                    st.experimental_rerun()
-                st.caption('Please click finished if you want to build another strategy.')
+                    color = self.red
+                txt = f'{i+1}. '+ com.body
+                txt = txt.replace("\n", "")
+                markdown_css(txt,self.text_size,color,height=20)
+            click_button('Start YOLO trading!')
+        elif st.session_state['current_session'][0]=='trading':
+            self._steps_description(0,0,0,1,0)
+            analysed_comments,strategy_parameters = st.session_state['current_session'][1]
+            df_buy_deals,df_sell_deals = self.YOLO_trade(analysed_comments,strategy_parameters) 
+            st.session_state['current_session'] = ('display_trading_summary_baloon',(df_buy_deals,df_sell_deals))
+            click_button('Trading summary')
+        elif st.session_state['current_session'][0] == 'display_trading_summary_baloon':
+            st.balloons()
+            self._steps_description(0,0,0,0,1)
+            df_buy_deals,df_sell_deals = st.session_state['current_session'][1]
+            self.trade_summary(df_buy_deals,df_sell_deals)
+            st.session_state['current_session'] = ('display_trading_summary',st.session_state['current_session'][1])
+            if click_button('Finished'):
+                # add rate app
+                del st.session_state['current_session']
+                st.experimental_rerun()
+            st.caption('Please click finished if you want to build another strategy.')
+        elif st.session_state['current_session'][0] == 'display_trading_summary':
+            self._steps_description(0,0,0,0,1)
+            buy,sell = st.session_state['current_session'][1]
+            self.trade_summary(buy,sell)
+            if click_button('Finished'):
+                # add rate app
+                del st.session_state['current_session']
+                st.experimental_rerun()
+            st.caption('Please click finished if you want to build another strategy.')
 
-    def _reddit_user_input(self) -> tuple:
+    def user_strategy_paramenters(self) -> tuple:
+        # select start-end dates
+        start_date = datetime.date.today() - datetime.timedelta(days=6)
+        end_date = start_date + datetime.timedelta(days=5)
+        start_trade = pd.to_datetime(st.text_input('Select start date for trading', f'{start_date}'))
+        end_trade = pd.to_datetime(st.text_input('Select end date for trading', f'{end_date}'))
+        loss_options = [i for i in range(101)]
+        gain_options = [i for i in range(101)]
+        loss_txt = 'Select stop loss percentage (recommended below 10):'
+        gain_txt = 'Select stop gain percentage (recommended below 10):'
+        stop_loss = st.select_slider(loss_txt,loss_options,value = 5)
+        stop_gain = st.select_slider(gain_txt,gain_options, value = 5)
+        return start_trade,end_trade,stop_loss,stop_gain
+
+    def reddit_user_input(self,start_trade:datetime) -> tuple:
         # select subreddit
         options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other']
         subreddit = st.selectbox('Select your favourite subreddit',options, index = 0)
@@ -205,11 +225,11 @@ class trade(Page):
         subreddit = subreddit.strip() # remove trailing spaces
     
         # select start-end dates
-        yesterday = datetime.date.today() - datetime.timedelta(days=1)
-        end_date = yesterday.strftime('%Y-%m-%d')
-        start_date = yesterday - datetime.timedelta(days=8)
-        start = pd.to_datetime(st.text_input('Select start date', f'{start_date}'))
-        end = pd.to_datetime(st.text_input('Select end date', f'{end_date}'))
+        start_date = datetime.date.today() - datetime.timedelta(days=11)
+        end_date = start_date + datetime.timedelta(days=4)
+        start_reddit = pd.to_datetime(st.text_input('Select start date for reddit post', f'{start_date}'))
+        txt = f'Select end date for reddit post (should be before start date of trading {start_trade.strftime("%Y-%m-%d")} to avoid forward looking bias.)'
+        end_reddit = pd.to_datetime(st.text_input(txt, f'{end_date}'))
         
         # select number of submissions,comments, level
         num_subs,num_comments,max_level = '','',''
@@ -239,9 +259,9 @@ class trade(Page):
         elif max_level == '':
             st.write('Please choose level.')
             return '','','','',''
-        return subreddit, start, end, num_subs, num_comments, max_level
+        return subreddit, start_reddit, end_reddit, num_subs, num_comments, max_level
 
-    def _load_reddit_data(self, user_input:tuple) -> 'list[praw.models.Comment]':
+    def scrape_reddit_data(self, user_input:tuple) -> 'list[praw.models.Comment]':
         subreddit, start, end, num_subs, num_comments, max_level = user_input
         # reddit object
         reddit = praw.Reddit(
@@ -303,20 +323,12 @@ class trade(Page):
 
         # sort comments by score
         comments.sort(key = lambda x: x.score, reverse = True)
+        bar.progress(1.00)
         sub_placeholder.empty()
         com_placeholder.empty()
         return comments
 
-    def _user_strategy_paramenters(self):
-        loss_options = [i for i in range(102)]
-        gain_options = [i for i in range(101)]
-        loss_txt = 'Select stop loss percentage, where 101 disables stop loss (recommended 101 - you have diamond hands, right?)'
-        gain_txt = 'Select stop gain percentage'
-        stop_loss = st.select_slider(loss_txt,loss_options,value = 101)
-        stop_gain = st.select_slider(gain_txt,gain_options, value = 10)
-        return stop_loss,stop_gain
-
-    def _analyse_comments(self, comments: 'list[praw.models.Comment]', parameters:tuple):
+    def analyse_comments(self, comments: 'list[praw.models.Comment]') -> list:
         # dislpay sentiment
         self.placeholder = st.empty()
         bar = st.progress(0)
@@ -342,16 +354,26 @@ class trade(Page):
         self.placeholder = st.empty()
         return analysed_comments
 
-    def _YOLO_trade(self, analysed_comments: 'list[tuple[praw.models.Comment,str]]') -> 'tuple[list]':
+    def YOLO_trade(self, analysed_comments: 'list[tuple[praw.models.Comment,str]]', strategy_parameters:tuple) -> 'tuple[list]':
+        @st.cache(show_spinner=False)
+        def _load_tickers_data(ticker:str, start:str, end:str):
+            ticker = yf.Ticker(ticker)
+            data = ticker.history(start=start,end=end,interval='1h')
+            return data
         buy,sell = [],[]
-        with open('context/symbols_dict.pickle','rb') as f:
-            symbols = pickle.load(f)
-        
+        start_trade,end_trade,stop_loss, stop_gain = strategy_parameters
+        stop_loss, stop_gain =1,1
+        end_date = end_trade.strftime('%Y-%m-%d')
+        end = end_trade.strftime('%Y-%m-%d %H:%M:S')
+        symbols = self._get_symbols()
+
+        # open positions based on sentiment
         # dislpay trades
+        txt = 'Openning trading positions'
+        self._markdown_css(txt,self.text_size,self.white)
         self.placeholder = st.empty()
         bar = st.progress(0)
         i = 0
-        # sentiment analysis for each comment
         for com,sentiment in analysed_comments:
             words = re.split("\s|(?<!\d)[,.](?!\d)", com.body)
             for w in words:
@@ -370,37 +392,168 @@ class trade(Page):
                         time.sleep(0.1)
             i+=1
             bar.progress(i/len(analysed_comments))
-        self.placeholder = st.empty()
         buy.sort(key=lambda x:x[1])
         sell.sort(key=lambda x:x[1])
-        return buy,sell
 
-    def _trade_summary(self, buy, sell):
-        with open('context/symbols_dict.pickle','rb') as f:
-            symbols = pickle.load(f)
-        with open('buy.pickle', 'wb') as f1:
-            pickle.dump(buy, f1)
-        with open('sell.pickle', 'wb') as f1:
-            pickle.dump(sell, f1)
-        if st.checkbox('Summary',value=False):
-            bought,sold = len(buy),len(sell)
-            trades = bought+sold
-            txt = f'Total number of trades: {trades}'
+        # close positions based on stop loss/gain and end date of trading
+        # dislpay trades
+        denom = len(buy)+len(sell)
+        txt = 'Closing trading positions'
+        self.placeholder = st.empty()
+        bar = st.progress(0)
+        i = 0
+        denom = len(buy)+len(sell)
+        txt = 'Closing trading positions'
+        self._markdown_css(txt,self.text_size,self.white)
+        symbols = self._get_symbols()
+        buy_deals,sell_deals = [],[]
+        for ticker,start in buy:
+            start_date, _ = start.split(' ')
+            data = _load_tickers_data(ticker, start_date, end_date)
+            data = data[data.index>=start]
+            open = self._find_opening_price(data,start)
+            close_date,close =  self._find_closing_price(data,open,stop_loss,stop_gain,True,end)
+            buy_deals.append((ticker,symbols[ticker],open,close,start,close_date))
+            txt = f'Sell: {symbols[ticker]} ({ticker}) on {close_date}'
+            self._markdown_css(txt,self.text_size,self.red,placeholder=True)
+            i+=1
+            bar.progress(i/denom)
+
+        for ticker,start in sell:
+            start_date, _ = start.split(' ')
+            data = _load_tickers_data(ticker, start_date, end_date)
+            data = data[data.index>=start]
+            open = self._find_opening_price(data,start)
+            close_date, close =  self._find_closing_price(data,open,stop_loss,stop_gain,False,end)
+            sell_deals.append((ticker,symbols[ticker],open,close,start,close_date))
+            txt = f'Buy: {symbols[ticker]} ({ticker}) on {close_date}'
+            self._markdown_css(txt,self.text_size,self.green,placeholder=True)
+            i+=1
+            bar.progress(i/denom)
+
+        df_buy_deals,df_sell_deals = pd.DataFrame(buy_deals),pd.DataFrame(sell_deals)
+        df_buy_deals.columns = ['ticker','company','open','close','open_time','close_time']
+        df_sell_deals.columns = ['ticker','company','open','close','open_time','close_time']
+        df_buy_deals['profit'] = df_buy_deals['close']-df_buy_deals['open']
+        df_sell_deals['profit'] = df_sell_deals['open']-df_sell_deals['close']
+        df_buy_deals.sort_values(by=['ticker','open_time'],inplace = True)
+        df_sell_deals.sort_values(by=['ticker','open_time'],inplace = True)
+        return df_buy_deals,df_sell_deals
+
+    def trade_summary(self, df_buy_deals:pd.DataFrame, df_sell_deals:pd.DataFrame):
+       
+        df_buy_grouped = df_buy_deals.groupby('ticker')['profit'].sum().reset_index()
+        df_sell_grouped = df_sell_deals.groupby('ticker')['profit'].sum().reset_index()
+        df_grouped = pd.concat([df_buy_grouped,df_sell_grouped]).groupby('ticker')['profit'].sum().reset_index()
+        
+        # currency
+        # df_buy_deals['currency'] = [self._get_currency(ticker) for ticker in df_buy_grouped['ticker']]
+        # df_sell_deals['currency'] = [self._get_currency(ticker) for ticker in df_sell_grouped['ticker']]
+        if st.checkbox('Summary',value=True):
+            long,short = len(df_buy_deals),len(df_sell_deals)
+            trades = long+short
+            profit = sum(df_grouped['profit'])
+            txt = f'Total number of trades is {trades}'
             markdown_css(txt,self.text_size,self.white)
-            txt = f'Bought stock {bought} times'
+            txt = f'Number of opened long positions is {long}'
             markdown_css(txt,self.text_size,self.white)
-            txt = f'Sold stock {sold} times'
+            txt = f'Number of opened short positions is {short}'
             markdown_css(txt,self.text_size,self.white)
+            txt = f'Total money made: {profit} USD'
+            markdown_css(txt,self.text_size,self.white)
+            fig = px.bar(df_grouped, x='ticker', y='profit',\
+                    color='profit',height=500,\
+                    title='Long deals',color_continuous_scale='Bluered_r')
+            st.plotly_chart(fig, use_container_width=True)
+
+        # profit barplots by ticker
+        if st.checkbox('Long deals profit'):
+            profit = sum(df_buy_grouped['profit'])
+            txt = f'Total money made: {profit} USD'
+            markdown_css(txt,self.text_size,self.white)
+            fig = px.bar(df_buy_grouped, x='ticker', y='profit',\
+                color='profit',height=500,\
+                title='Long deals',color_continuous_scale='Bluered_r')
+            st.plotly_chart(fig, use_container_width=True)
+        # profit barplots by ticker
+        if st.checkbox('Short deals profit'):
+            profit = sum(df_sell_grouped['profit'])
+            txt = f'Total money made: {profit} USD'
+            markdown_css(txt,self.text_size,self.white)
+            fig = px.bar(df_sell_grouped, x='ticker', y='profit',\
+                    color='profit',height=500,\
+                    title='Long deals',color_continuous_scale='Bluered_r')
+            st.plotly_chart(fig, use_container_width=True)
+
+        # long/short volumes
+        if st.checkbox('Long deals volumes'):
+            df_buy_volumes = df_buy_deals
+            df_buy_volumes['volume'] = 1
+            df_buy_volumes = df_buy_volumes.groupby('ticker')['volume'].sum().reset_index()
+            fig = px.bar(df_buy_volumes, x='ticker', y='volume',\
+                    color='volume',height=500,\
+                    title='Long deals')
+            st.plotly_chart(fig, use_container_width=True)
+
+        if st.checkbox('Short deals volumes'):
+            df_sell_volumes = df_sell_deals
+            df_sell_volumes['volume'] = 1
+            df_sell_volumes = df_sell_volumes.groupby('ticker')['volume'].sum().reset_index()
+            fig = px.bar(df_sell_volumes, x='ticker', y='volume',\
+                    color='volume',height=500,\
+                    title='Long deals')
+            st.plotly_chart(fig, use_container_width=True)
+
+        # long/short deals data
+        if st.checkbox('Show long deals data'):
+            st.write(df_buy_deals)
+        if st.checkbox('Show short deals data'):
+            st.write(df_sell_deals)
 
         if st.checkbox('Show trades'):
+            symbols = self._get_symbols()
             col1,col2 = st.columns(2)
-            for w,date in buy:
-                txt = f'Buy: {symbols[w]} ({w}) on {date}'
+            for i in range(len(df_buy_deals)):
+                ticker = df_buy_deals.iloc[i]['ticker']
+                date = df_buy_deals.iloc[i]['open_time']
+                txt = f'Buy: {symbols[ticker]} ({ticker}) on {date}'
                 markdown_css(txt,self.text_size,self.green,col=col1)
-            for w,date in sell:
-                txt = f'Sell: {symbols[w]} ({w}) on {date}'
+            for i in range(len(df_sell_deals)):
+                ticker = df_buy_deals.iloc[i]['ticker']
+                date = df_buy_deals.iloc[i]['open_time']
+                txt = f'Sell: {symbols[ticker]} ({ticker}) on {date}'
                 markdown_css(txt,self.text_size,self.red,col=col2)
-            
+    @st.cache
+    def _get_currency(self, ticker:str) -> str:
+        ticker = yf.Ticker(ticker)
+        return ticker.info['currency']
+
+    def _find_opening_price(self, data:pd.DataFrame, start:str):
+        for i in range(len(data)):
+            if data.index[i].strftime('%Y-%m-%d %H:%M:%S')>=start:
+                return data.iloc[i]['Open']
+
+    def _find_closing_price(self, data:pd.DataFrame ,open:float ,stop_loss:float ,stop_gain:float ,buy:bool,end:str):
+        if buy:
+            close_loss_level = open*(1-stop_loss/100) if stop_loss<101 else 0
+            close_gain_level = open*(1+stop_gain/100)
+        else:
+            close_loss_level = open*(1+stop_loss/100) if stop_loss<101 else float('inf')
+            close_gain_level = open*(1-stop_gain/100)
+        for i in range(len(data)):
+            if data.iloc[i]['Open']>=max(close_loss_level,close_gain_level):
+                close_date = data.index[i].strftime('%Y-%m-%d %H:%M:%S')
+                return  close_date, max(close_loss_level,close_gain_level)
+            elif data.iloc[i]['Open']<=min(close_loss_level,close_gain_level):
+                close_date = data.index[i].strftime('%Y-%m-%d %H:%M:%S')
+                return close_date, min(close_loss_level,close_gain_level)
+        return end, self._find_opening_price(data, end)
+
+    def _get_symbols(self):
+        with open('context/symbols_dict.pickle','rb') as f:
+            symbols = pickle.load(f)
+        return symbols
+
     def _nltk_sentiment(self, text: str):
         sia = SentimentIntensityAnalyzer()
         sub_entries_nltk = {'negative': 0, 'positive' : 0, 'neutral' : 0}
@@ -435,11 +588,11 @@ class trade(Page):
                         is_run4:bool,is_run5:bool,runColor=st.get_option("theme.primaryColor"),\
                         nonrunColor='#631126'):
 
-        txt = '1. Scrape through Reddit posts'
+        txt = '1. Select parameters for trading strategy'
         color = f"{is_run1*runColor+(1-is_run1)*nonrunColor}"
         markdown_css(txt,self.text_size,color)
         
-        txt = '2. Select parameters for trading strategy'
+        txt = '2. Scrape through Reddit posts'
         color = f"{is_run2*runColor+(1-is_run2)*nonrunColor}"
         markdown_css(txt,self.text_size,color)
 
@@ -454,8 +607,6 @@ class trade(Page):
         txt = '5. Generate summary of trading results'
         color = f"{is_run5*runColor+(1-is_run5)*nonrunColor}"
         markdown_css(txt,self.text_size,color)
-
-
 
     def _markdown_css(self,txt:str, font_size:int, color:str, height:int = 17, position:str = 'left',col:int = 1, placeholder: bool = False) -> None:
         css_txt = f'<p style="font-family:sans-serif;color:{color};font-size: {font_size}px;text-align:{position};line-height: {height}px;"> {txt} </p>'
