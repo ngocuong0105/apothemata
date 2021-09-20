@@ -11,7 +11,7 @@ import pickle
 import datetime
 
 from page import Page
-
+from utils import click_button
 class checkStock(Page):
     def __init__(self, title: str) -> None:
         super().__init__(title)
@@ -187,7 +187,7 @@ class checkStock(Page):
                 st.table(data)
             else:
                 st.dataframe(data)
-            download=self._click_button('Download csv')
+            download=click_button('Download csv')
             if download:
                 csv = data.to_csv(index=False)
                 b64 = base64.b64encode(csv.encode()).decode()  # some strings
@@ -221,16 +221,6 @@ class checkStock(Page):
             st.write(ticker.earnings)
         if st.checkbox('Quarterly earnings'):
             st.write(ticker.quarterly_earnings)
-
-    def _click_button(self, txt:str, on_click = None, args = None, pressed: bool=False):
-        back_color = st.get_option('theme.primaryColor')
-        placeholder = st.empty()
-        placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
-        pressed = st.button(f'{txt}', on_click = on_click, args = args)
-        if pressed:
-            back_color = st.get_option('theme.backgroundColor')
-            placeholder.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
-        return pressed
 
 DEFAULT_LAYOUT = dict(
     xaxis=dict(
