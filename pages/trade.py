@@ -97,6 +97,7 @@ class trade(Page):
             self._steps_description(1,1,1,1,1)
             click_button('Start')
 
+        # taking trading strategy parameters
         elif st.session_state['current_session'][0]=='start':
             self._steps_description(1,0,0,0,0)
             strategy_parameters = self.user_strategy_paramenters()
@@ -104,21 +105,24 @@ class trade(Page):
                 st.session_state['current_session'] = ('input_for_strategy',strategy_parameters)
                 st.experimental_rerun()
 
+        # trading strategy parameters set
         elif st.session_state['current_session'][0]=='input_for_strategy':
             self._steps_description(1,0,0,0,0)
             strategy_parameters = st.session_state['current_session'][1]
             txt = 'Parameters set:'
             markdown_css(txt,self.text_size,self.white)
-            if strategy_parameters[0]!=101:
-                txt = f'① Stop loss is {strategy_parameters[-2]}%'
-            else:
-                txt = f'① Stop loss is disabled'
+            txt = f'◦ Start date: {strategy_parameters[0]}'
             markdown_css(txt,self.text_size,self.white)
-            txt = f'② Stop gain is {strategy_parameters[-1]}%'
+            txt = f'◦ End date: {strategy_parameters[1]}'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ Stop loss: {strategy_parameters[2]}%'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ Stop gain: {strategy_parameters[3]}%'
             markdown_css(txt,self.text_size,self.white)
             st.session_state['current_session'] = ('input_for_reddit',strategy_parameters)
             click_button('Next')
 
+        # reddit input parameters
         elif st.session_state['current_session'][0]=='input_for_reddit':
             self._steps_description(0,1,0,0,0)
             strategy_parameters = st.session_state['current_session'][1]
@@ -128,6 +132,7 @@ class trade(Page):
                 st.session_state['current_session'] = ('scrape_posts',(input_for_reddit,strategy_parameters))
                 st.experimental_rerun()
 
+        # scrape posts
         elif st.session_state['current_session'][0]=='scrape_posts':
             self._steps_description(0,1,0,0,0)
             input_for_reddit,strategy_parameters = st.session_state['current_session'][1]
@@ -138,6 +143,7 @@ class trade(Page):
 
             click_button('Next')
 
+        # top 10 comments by score
         elif st.session_state['current_session'][0]=='top10_comments':
             self._steps_description(0,0,1,0,0)
             comments,strategy_parameters = st.session_state['current_session'][1]
@@ -150,6 +156,8 @@ class trade(Page):
                 markdown_css(txt,self.text_size,self.white,height=20)
             st.session_state['current_session'] = ('sentiment_analysis',(comments,strategy_parameters))
             click_button('Analyse posts and comments')
+
+        # sentiment analysis
         elif st.session_state['current_session'][0] == 'sentiment_analysis':
             self._steps_description(0,0,1,0,0)
             comments,strategy_parameters = st.session_state['current_session'][1]
@@ -158,6 +166,8 @@ class trade(Page):
             txt = f'All posts and comments are analysed. Number of comments considered is {len(comments)}.'
             markdown_css(f'{txt}',self.text_size,self.white)
             click_button('Next')
+
+        # top 10 comments with sentiment
         elif st.session_state['current_session'][0]=='top10_comments_sentiment':
             self._steps_description(0,0,1,0,0)
             analysed_comments,strategy_parameters = st.session_state['current_session'][1]
@@ -176,12 +186,16 @@ class trade(Page):
                 txt = txt.replace("\n", "")
                 markdown_css(txt,self.text_size,color,height=20)
             click_button('Start YOLO trading!')
+
+        # yolo trading
         elif st.session_state['current_session'][0]=='trading':
             self._steps_description(0,0,0,1,0)
             analysed_comments,strategy_parameters = st.session_state['current_session'][1]
             df_buy_deals,df_sell_deals = self.YOLO_trade(analysed_comments,strategy_parameters) 
             st.session_state['current_session'] = ('display_trading_summary_baloon',(df_buy_deals,df_sell_deals))
             click_button('Trading summary')
+
+        # summary with baloons
         elif st.session_state['current_session'][0] == 'display_trading_summary_baloon':
             st.balloons()
             self._steps_description(0,0,0,0,1)
@@ -193,6 +207,8 @@ class trade(Page):
                 del st.session_state['current_session']
                 st.experimental_rerun()
             st.caption('Please click finished if you want to build another strategy.')
+
+        # summary
         elif st.session_state['current_session'][0] == 'display_trading_summary':
             self._steps_description(0,0,0,0,1)
             buy,sell = st.session_state['current_session'][1]
@@ -209,6 +225,7 @@ class trade(Page):
         end_date = start_date + datetime.timedelta(days=5)
         start_trade = pd.to_datetime(st.text_input('Select start date for trading', f'{start_date}'))
         end_trade = pd.to_datetime(st.text_input('Select end date for trading', f'{end_date}'))
+        # select stop loss/gain
         loss_options = [i for i in range(101)]
         gain_options = [i for i in range(101)]
         loss_txt = 'Select stop loss percentage (recommended below 10):'
@@ -356,11 +373,13 @@ class trade(Page):
         return analysed_comments
 
     def YOLO_trade(self, analysed_comments: 'list[tuple[praw.models.Comment,str]]', strategy_parameters:tuple) -> 'tuple[list]':
+        # loading tickers between certain times
         @st.cache(show_spinner=False)
         def _load_tickers_data(ticker:str, start:str, end:str):
             ticker = yf.Ticker(ticker)
             data = ticker.history(start=start,end=end,interval='1h')
             return data
+
         buy,sell = [],[]
         start_trade,end_trade,stop_loss, stop_gain = strategy_parameters
         stop_loss, stop_gain =1,1
