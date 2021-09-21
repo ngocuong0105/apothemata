@@ -138,7 +138,7 @@ class trade(Page):
                 subreddit, num_memes, start_reddit, end_reddit = st.session_state['input_for_reddit']
                 memes = self.scrape_reddit_memes(subreddit, num_memes, start_reddit, end_reddit)
                 st.session_state['scrape_memes'] = memes
-                st.experimental_rerun()
+                click_button('Next')
             if click_button('Back'):
                 del st.session_state['parameters_set']
                 st.experimental_rerun()
@@ -167,7 +167,7 @@ class trade(Page):
         subreddit = subreddit.strip() # remove trailing spaces
         if subreddit[:2]=='r/':
             subreddit = subreddit[2:]
-        num_memes = st.number_input('Select number of memes you want to consider', value = 100)
+        num_memes = st.number_input('Select number of memes you want to consider', value = 10)
 
         # select start-end dates
         start_date = datetime.date.today() - datetime.timedelta(days=11)
@@ -208,9 +208,10 @@ class trade(Page):
                 passed+=1
                 post_placeholder.text(f'>>> downloading image at {url}')
                 bar.progress(passed/num_memes)
-                image_placeholder.image(f'{url}',use_column_width = True)
+                image_placeholder.image(f'{url}',use_column_width = 'auto')
                 if passed>=num_memes:
                     break
+        post_placeholder.text('Memes/pictures dowloaded. To continue please click next on the bottom of the page.')
         return memes
 
     def _set_background(self, png_url, placeholder:bool = False):
