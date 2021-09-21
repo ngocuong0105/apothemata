@@ -1,4 +1,5 @@
 import streamlit as st
+from utils import click_button
 def st_session(key:str, curr:str, next:str):
     def decorator(func):
         if key not in st.session_state:
@@ -10,13 +11,3 @@ def st_session(key:str, curr:str, next:str):
             return wrapper
     return decorator
 
-def _click_button(txt:str, on_click = None, args = None, override_pressed:bool = False):
-    if not override_pressed:
-        back_color = st.get_option('theme.primaryColor')
-        st.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
-        pressed = st.button(f'{txt}', on_click = on_click, args = args)
-        if pressed:
-            back_color = st.get_option('theme.backgroundColor')
-            st.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
-        return pressed
-    return _click_button(txt)

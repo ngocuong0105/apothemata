@@ -11,11 +11,11 @@ def markdown_css(txt:str, font_size:int, color:str, height:int = 17, position:st
 def click_button(txt:str, on_click = None, args = None, override_pressed:bool = False):
     if not override_pressed:
         back_color = st.get_option('theme.primaryColor')
-        st.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
+        st.markdown(f"<style>div.stButton > button:first-child {{background-color:#52535d;color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
         pressed = st.button(f'{txt}', on_click = on_click, args = args)
         if pressed:
             back_color = st.get_option('theme.backgroundColor')
-            st.markdown(f"<style>div.stButton > button:first-child {{background-color:{back_color};color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
+            st.markdown(f"<style>div.stButton > button:first-child {{background-color:#52535d;color:white;font-size:16px;text-align:center;}} </style>", unsafe_allow_html=True)
         return pressed
     return click_button(txt)
 

@@ -1,3 +1,4 @@
+from numpy.lib.function_base import place
 import praw
 import streamlit as st
 from collections import deque
@@ -13,6 +14,14 @@ import pickle
 import yfinance as yf
 import plotly.express as px
 import base64
+import pytesseract
+pytesseract.pytesseract.tesseract_cmd ='tesseract'
+from PIL import Image
+import requests
+from io import BytesIO
+import urllib
+import os
+from PIL import Image
 
 from page import Page
 from utils import markdown_css, click_button, wait_message
@@ -50,10 +59,8 @@ class trade(Page):
         return strategy
 
     def reddit_strategy(self):
-
         # Choosing risk appetite
         options =  ['🏦 I want to make a risk-averse long term investment.',
-                    # '📈 I want to protect my savings from inflation.',
                     '🙌 I have diamond hands!',
                     '🚀 Lets go to the moon!',
                     '']
@@ -66,40 +73,203 @@ class trade(Page):
                 wait_message(txt,seconds)
                 txt = '😬 Risk-averse, really? Sorry you are using the wrong Web App.'
                 markdown_css(txt,20,self.white,height=200,position='center')
-        elif risk_type == '📈 I want to protect my savings from inflation.':
-            if click_button('Find strategy'):
-                seconds = randint(5,10)
-                txt = 'Searching for trading strategy...'
-                wait_message(txt,seconds)
-                txt = '🙄 Strategy not available. Who cares about savings? Here we play big - win big!'
-                markdown_css(txt,20,self.white,height=200,position='center')
         elif risk_type == '🙌 I have diamond hands!':
             self.diamond_hands()
         elif risk_type == '🚀 Lets go to the moon!':
-            # txt = '💰🤑💰 Superb... Armstrong will be your surname!'
-            # markdown_css(txt,self.text_size,self.white)
-            st.caption('Under development, stay tuned!')
+            self.go_moon()
+
+    def go_moon(self):
+        txt = '💰🤑💰 Superb... Armstrong will be your surname!'
+        markdown_css(txt,self.text_size,self.white)
+        st.write('')# empty line
+        txt = 'Lets build your trading strategy'
+        markdown_css(txt,25,f'{st.get_option("theme.primaryColor")}')
+
+        # initialize starting session
+        if 'start' not in st.session_state:
+            txt = 'Building this trategy takes up to 9 minutes and has the following steps:'
+            markdown_css(txt,self.text_size,f'{st.get_option("theme.primaryColor")}')
+            self._steps_description_moon(1,1,1,1,1,1)
+            if click_button('Start'):
+                st.session_state['start'] = None
+                st.experimental_rerun()
+            st.caption('Investing real money in this strategy is highly discouraged.')
+        
+        # taking trading strategy parameters
+        elif 'input_for_strategy' not in st.session_state:
+            self._steps_description_moon(1,0,0,0,0,0)
+            strategy_parameters = self.user_strategy_paramenters()
+            if click_button('Set parameters'):
+                st.session_state['input_for_strategy'] = strategy_parameters
+                st.experimental_rerun()
+            if click_button('Back'):
+                del st.session_state['start']
+                st.experimental_rerun()
+
+        # trading strategy parameters set
+        elif 'parameters_set' not in st.session_state:
+            self._steps_description_moon(1,0,0,0,0,0)
+            strategy_parameters = st.session_state['input_for_strategy']
+            txt = 'Parameters set:'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ Start date: {strategy_parameters[0].strftime("%Y-%m-%d")}'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ End date: {strategy_parameters[1].strftime("%Y-%m-%d")}'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ Stop loss: {strategy_parameters[2]}%'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ Stop gain: {strategy_parameters[3]}%'
+            markdown_css(txt,self.text_size,self.white)
+            if click_button('Next'):
+                st.session_state['parameters_set'] = None
+                st.experimental_rerun()
+            if click_button('Back'):
+                del st.session_state['input_for_strategy']
+                st.experimental_rerun()
+
+        # reddit input parameters and screpe memes
+        elif 'input_for_reddit' not in st.session_state:
+            self._steps_description_moon(0,1,0,0,0,0)
+            strategy_parameters = st.session_state['input_for_strategy']
+            start_trade = strategy_parameters[0]
+            input_for_reddit = self.reddit_user_input_moon(start_trade)
+            if click_button('Scrape Reddit memes'):
+                st.session_state['input_for_reddit'] = input_for_reddit
+                subreddit, num_memes, start_reddit, end_reddit = st.session_state['input_for_reddit']
+                memes = self.scrape_reddit_memes(subreddit, num_memes, start_reddit, end_reddit)
+                st.session_state['scrape_memes'] = memes
+                st.experimental_rerun()
+            if click_button('Back'):
+                del st.session_state['parameters_set']
+                st.experimental_rerun()
+
+        # top memes
+        elif 'top_memes' not in st.session_state:
+            self._steps_description_moon(0,1,0,0,0,0)
+            txt = 'Hottest 10 memes/pictures:'
+            markdown_css(txt,self.text_size,self.white)
+            memes = st.session_state['scrape_memes']
+            c1,c2,c3,c4,c5 = st.columns(5)
+            ls = [c1,c2,c3,c4,c5]
+            for i in range(10):
+                _,_,title,url = memes[i]
+                ls[i%5].image(f'{url}', use_column_width = True,caption = f'Title:{title}')
+            if click_button('Back'):
+                del st.session_state['input_for_reddit']
+                st.experimental_rerun()
+
+
+    def reddit_user_input_moon(self, start_trade) -> tuple:
+        options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other']
+        subreddit = st.selectbox('Select your favourite subreddit',options, index = 0)
+        if subreddit == 'other':
+            subreddit = st.text_input('Choose subreddit (e.g r/subRedditName, subRedditName)')
+        subreddit = subreddit.strip() # remove trailing spaces
+        if subreddit[:2]=='r/':
+            subreddit = subreddit[2:]
+        num_memes = st.number_input('Select number of memes you want to consider', value = 100)
+
+        # select start-end dates
+        start_date = datetime.date.today() - datetime.timedelta(days=11)
+        end_date = start_date + datetime.timedelta(days=4)
+        start_reddit = pd.to_datetime(st.text_input('Select start date for reddit post', f'{start_date}'))
+        txt = f'Select end date for reddit post (should be before start date of trading {start_trade.strftime("%Y-%m-%d")} to avoid forward looking bias.'
+        end_reddit = pd.to_datetime(st.text_input(txt, f'{end_date}'))
+
+        return subreddit, num_memes, start_reddit, end_reddit
+
+    def scrape_reddit_memes(self,subreddit:str, num_memes:int, start_reddit:str, end_reddit:str):
+        # reddit object
+        reddit = praw.Reddit(
+                client_id=st.secrets["client_id"],
+                client_secret=st.secrets["client_secret"],
+                user_agent=st.secrets["user_agent"],
+                username=st.secrets["username"],
+                password=st.secrets["password"],
+                )
+        subreddit = reddit.subreddit(subreddit)
+        allowed_image_extensions = ['.jpg', '.jpeg', '.png']
+        passed = 0
+        memes = []
+        post_placeholder = st.empty()
+        bar = st.progress(0)
+        image_placeholder = st.empty()
+        for post in subreddit.hot(limit=None):
+            url = post.url
+            _,ext = os.path.splitext(url)
+            if ext in allowed_image_extensions:
+                response = requests.get(url)
+                img = Image.open(BytesIO(response.content))
+                self._set_background(url)
+                sentiment = self._nltk_sentiment(pytesseract.image_to_string(img))
+                title = post.title
+                date = datetime.datetime.utcfromtimestamp(post.created_utc).strftime('%Y-%m-%d %H:%M:%S')
+                memes.append((sentiment,date,title,url))
+                passed+=1
+                post_placeholder.text(f'>>> downloading image at {url}')
+                bar.progress(passed/num_memes)
+                image_placeholder.image(f'{url}',use_column_width = True)
+                if passed>=num_memes:
+                    break
+        return memes
+
+    def _set_background(self, png_url, placeholder:bool = False):
+        page_bg_img = f'<style>body {{background-image: url("{png_url}");background-size: 12px;}}</style>'
+        
+        self.placeholder = st.empty()
+        if placeholder:
+            self.placeholder.markdown(page_bg_img, unsafe_allow_html=True)
+        else:
+            st.markdown(page_bg_img, unsafe_allow_html=True)
+
+    def _steps_description_moon(self,is_run1:bool,is_run2:bool,is_run3:bool,\
+                        is_run4:bool,is_run5:bool,is_run6,runColor=st.get_option("theme.primaryColor"),\
+                        nonrunColor='#631126'):
+
+        txt = '1. Select parameters for trading strategy'
+        color = f"{is_run1*runColor+(1-is_run1)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
+        
+        txt = '2. Scrape through Reddit memes'
+        color = f"{is_run2*runColor+(1-is_run2)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
+
+        txt = '3. Extract texts from memes'
+        color = f"{is_run3*runColor+(1-is_run3)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
+
+        txt = '4. Sentiment analysis on texts'
+        color = f"{is_run4*runColor+(1-is_run4)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
+        
+        txt = '5. YOLO trading'
+        color = f"{is_run5*runColor+(1-is_run5)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
+
+        txt = '6. Generate summary of trading results'
+        color = f"{is_run6*runColor+(1-is_run6)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
 
     def diamond_hands(self):
         txt = '💎 Great! Holding meme stonks is in your nature.'
         markdown_css(txt,self.text_size,self.white)
 
-        # Building strategy
         st.write('')# empty line
         txt = 'Lets build your trading strategy'
         markdown_css(txt,25,f'{st.get_option("theme.primaryColor")}')
         
         # initialize current running session
         if 'current_session' not in st.session_state:
-            st.session_state['current_session'] = ('start',None)
-            txt = 'The workflow is simple and takes up to 9 minutes following these steps:'
+            txt = 'The workflow is simple and takes up to 7 minutes following these steps:'
             markdown_css(txt,self.text_size,f'{st.get_option("theme.primaryColor")}')
-            self._steps_description(1,1,1,1,1)
-            click_button('Start')
+            self._steps_description_diamond(1,1,1,1,1)
+            if click_button('Start'):
+                st.session_state['current_session'] = ('start',None)
+                st.experimental_rerun()
 
         # taking trading strategy parameters
         elif st.session_state['current_session'][0]=='start':
-            self._steps_description(1,0,0,0,0)
+            self._steps_description_diamond(1,0,0,0,0)
             strategy_parameters = self.user_strategy_paramenters()
             if click_button('Set parameters'):
                 st.session_state['current_session'] = ('input_for_strategy',strategy_parameters)
@@ -107,13 +277,13 @@ class trade(Page):
 
         # trading strategy parameters set
         elif st.session_state['current_session'][0]=='input_for_strategy':
-            self._steps_description(1,0,0,0,0)
+            self._steps_description_diamond(1,0,0,0,0)
             strategy_parameters = st.session_state['current_session'][1]
             txt = 'Parameters set:'
             markdown_css(txt,self.text_size,self.white)
-            txt = f'◦ Start date: {strategy_parameters[0]}'
+            txt = f'◦ Start date: {strategy_parameters[0].strftime("%Y-%m-%d")}'
             markdown_css(txt,self.text_size,self.white)
-            txt = f'◦ End date: {strategy_parameters[1]}'
+            txt = f'◦ End date: {strategy_parameters[1].strftime("%Y-%m-%d")}'
             markdown_css(txt,self.text_size,self.white)
             txt = f'◦ Stop loss: {strategy_parameters[2]}%'
             markdown_css(txt,self.text_size,self.white)
@@ -124,7 +294,7 @@ class trade(Page):
 
         # reddit input parameters
         elif st.session_state['current_session'][0]=='input_for_reddit':
-            self._steps_description(0,1,0,0,0)
+            self._steps_description_diamond(0,1,0,0,0)
             strategy_parameters = st.session_state['current_session'][1]
             start_trade = strategy_parameters[0]
             input_for_reddit = self.reddit_user_input(start_trade)
@@ -134,7 +304,7 @@ class trade(Page):
 
         # scrape posts
         elif st.session_state['current_session'][0]=='scrape_posts':
-            self._steps_description(0,1,0,0,0)
+            self._steps_description_diamond(0,1,0,0,0)
             input_for_reddit,strategy_parameters = st.session_state['current_session'][1]
             comments = self.scrape_reddit_data(input_for_reddit)
             st.session_state['current_session'] = ('top10_comments',(comments,strategy_parameters))
@@ -144,7 +314,7 @@ class trade(Page):
 
         # top 10 comments by score
         elif st.session_state['current_session'][0]=='top10_comments':
-            self._steps_description(0,0,1,0,0)
+            self._steps_description_diamond(0,0,1,0,0)
             comments,strategy_parameters = st.session_state['current_session'][1]
             txt = 'Top 10 comments with highest score:'
             markdown_css(txt,self.text_size,self.white)
@@ -158,7 +328,7 @@ class trade(Page):
 
         # sentiment analysis
         elif st.session_state['current_session'][0] == 'sentiment_analysis':
-            self._steps_description(0,0,1,0,0)
+            self._steps_description_diamond(0,0,1,0,0)
             comments,strategy_parameters = st.session_state['current_session'][1]
             analysed_comments = self.analyse_comments(comments)
             st.session_state['current_session'] = ('top10_comments_sentiment',(analysed_comments,strategy_parameters))
@@ -168,7 +338,7 @@ class trade(Page):
 
         # top 10 comments with sentiment
         elif st.session_state['current_session'][0]=='top10_comments_sentiment':
-            self._steps_description(0,0,1,0,0)
+            self._steps_description_diamond(0,0,1,0,0)
             analysed_comments,strategy_parameters = st.session_state['current_session'][1]
             st.session_state['current_session'] = ('trading',(analysed_comments,strategy_parameters))
             txt = 'Sentiment of top 10 comments with highest score (red is negative, green is positive, yellow is neutral):'
@@ -188,7 +358,7 @@ class trade(Page):
 
         # yolo trading
         elif st.session_state['current_session'][0]=='trading':
-            self._steps_description(0,0,0,1,0)
+            self._steps_description_diamond(0,0,0,1,0)
             analysed_comments,strategy_parameters = st.session_state['current_session'][1]
             df_buy_deals,df_sell_deals = self.YOLO_trade(analysed_comments,strategy_parameters) 
             st.session_state['current_session'] = ('display_trading_summary_baloon',(df_buy_deals,df_sell_deals))
@@ -197,7 +367,7 @@ class trade(Page):
         # summary with baloons
         elif st.session_state['current_session'][0] == 'display_trading_summary_baloon':
             st.balloons()
-            self._steps_description(0,0,0,0,1)
+            self._steps_description_diamond(0,0,0,0,1)
             df_buy_deals,df_sell_deals = st.session_state['current_session'][1]
             self.trade_summary(df_buy_deals,df_sell_deals)
             st.session_state['current_session'] = ('display_trading_summary',st.session_state['current_session'][1])
@@ -209,7 +379,7 @@ class trade(Page):
 
         # summary
         elif st.session_state['current_session'][0] == 'display_trading_summary':
-            self._steps_description(0,0,0,0,1)
+            self._steps_description_diamond(0,0,0,0,1)
             buy,sell = st.session_state['current_session'][1]
             self.trade_summary(buy,sell)
             if click_button('Finished'):
@@ -245,7 +415,7 @@ class trade(Page):
         start_date = datetime.date.today() - datetime.timedelta(days=11)
         end_date = start_date + datetime.timedelta(days=4)
         start_reddit = pd.to_datetime(st.text_input('Select start date for reddit post', f'{start_date}'))
-        txt = f'Select end date for reddit post (should be before start date of trading {start_trade.strftime("%Y-%m-%d")} to avoid forward looking bias.)'
+        txt = f'Select end date for reddit post (should be before start date of trading {start_trade.strftime("%Y-%m-%d")} to avoid forward looking bias.'
         end_reddit = pd.to_datetime(st.text_input(txt, f'{end_date}'))
         
         # select number of submissions,comments, level
@@ -473,9 +643,9 @@ class trade(Page):
             profit = sum(df_grouped['profit'])
             txt = f'Total number of trades is {trades}'
             markdown_css(txt,self.text_size,self.white)
-            txt = f'Number of opened long positions is {long}'
+            txt = f'Number of times opening long positions is {long}'
             markdown_css(txt,self.text_size,self.white)
-            txt = f'Number of opened short positions is {short}'
+            txt = f'Number of time opening short positions is {short}'
             markdown_css(txt,self.text_size,self.white)
             txt = f'Total money made: {profit} USD'
             markdown_css(txt,self.text_size,self.white)
@@ -550,10 +720,10 @@ class trade(Page):
                 date = df_buy_deals.iloc[i]['open_time']
                 txt = f'Sell: {symbols[ticker]} ({ticker}) on {date}'
                 markdown_css(txt,self.text_size,self.red,col=col2)
-    @st.cache
-    def _get_currency(self, ticker:str) -> str:
-        ticker = yf.Ticker(ticker)
-        return ticker.info['currency']
+    # @st.cache
+    # def _get_currency(self, ticker:str) -> str:
+    #     ticker = yf.Ticker(ticker)
+    #     return ticker.info['currency']
 
     def _find_opening_price(self, data:pd.DataFrame, start:str):
         for i in range(len(data)):
@@ -611,7 +781,7 @@ class trade(Page):
             return False
         return True
 
-    def _steps_description(self,is_run1:bool,is_run2:bool,is_run3:bool,\
+    def _steps_description_diamond(self,is_run1:bool,is_run2:bool,is_run3:bool,\
                         is_run4:bool,is_run5:bool,runColor=st.get_option("theme.primaryColor"),\
                         nonrunColor='#631126'):
 
