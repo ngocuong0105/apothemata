@@ -19,7 +19,6 @@ pytesseract.pytesseract.tesseract_cmd ='tesseract'
 from PIL import Image
 import requests
 from io import BytesIO
-import urllib
 import os
 from PIL import Image
 
@@ -89,7 +88,7 @@ class trade(Page):
         if 'start' not in st.session_state:
             txt = 'Building this trategy takes up to 9 minutes and has the following steps:'
             markdown_css(txt,self.text_size,f'{st.get_option("theme.primaryColor")}')
-            self._steps_description_moon(1,1,1,1,1,1)
+            self._steps_description_moon(1,1,1,1)
             if click_button('Start'):
                 st.session_state['start'] = None
                 st.experimental_rerun()
@@ -97,7 +96,7 @@ class trade(Page):
         
         # taking trading strategy parameters
         elif 'input_for_strategy' not in st.session_state:
-            self._steps_description_moon(1,0,0,0,0,0)
+            self._steps_description_moon(1,0,0,0)
             strategy_parameters = self.user_strategy_paramenters()
             if click_button('Set parameters'):
                 st.session_state['input_for_strategy'] = strategy_parameters
@@ -108,7 +107,7 @@ class trade(Page):
 
         # trading strategy parameters set
         elif 'parameters_set' not in st.session_state:
-            self._steps_description_moon(1,0,0,0,0,0)
+            self._steps_description_moon(1,0,0,0)
             strategy_parameters = st.session_state['input_for_strategy']
             txt = 'Parameters set:'
             markdown_css(txt,self.text_size,self.white)
@@ -129,15 +128,15 @@ class trade(Page):
 
         # reddit input parameters and screpe memes
         elif 'input_for_reddit' not in st.session_state:
-            self._steps_description_moon(0,1,0,0,0,0)
+            self._steps_description_moon(0,1,0,0)
             strategy_parameters = st.session_state['input_for_strategy']
             start_trade = strategy_parameters[0]
             input_for_reddit = self.reddit_user_input_moon(start_trade)
             if click_button('Scrape Reddit memes'):
                 st.session_state['input_for_reddit'] = input_for_reddit
                 subreddit, num_memes, start_reddit, end_reddit = st.session_state['input_for_reddit']
-                memes = self.scrape_reddit_memes(subreddit, num_memes, start_reddit, end_reddit)
-                st.session_state['scrape_memes'] = memes
+                analysed_memes = self.scrape_reddit_memes(subreddit, num_memes, start_reddit, end_reddit)
+                st.session_state['scrape_memes'] = analysed_memes
                 click_button('Next')
             if click_button('Back'):
                 del st.session_state['parameters_set']
@@ -145,19 +144,60 @@ class trade(Page):
 
         # top memes
         elif 'top_memes' not in st.session_state:
-            self._steps_description_moon(0,1,0,0,0,0)
+            self._steps_description_moon(0,1,0,0)
             txt = 'Hottest 10 memes/pictures:'
             markdown_css(txt,self.text_size,self.white)
-            memes = st.session_state['scrape_memes']
+            analysed_memes = st.session_state['scrape_memes']
             c1,c2,c3,c4,c5 = st.columns(5)
             ls = [c1,c2,c3,c4,c5]
             for i in range(10):
-                _,_,title,url = memes[i]
+                _,_,_,title,url = analysed_memes[i]
                 ls[i%5].image(f'{url}', use_column_width = True,caption = f'Title:{title}')
+            if click_button('Yolo trading!'):
+                st.session_state['top_memes'] = None
+                st.experimental_rerun()
             if click_button('Back'):
                 del st.session_state['input_for_reddit']
                 st.experimental_rerun()
+        
+        # yolo trading
+        elif 'yolo_trading' not in st.session_state:
+            self._steps_description_moon(0,0,1,0)
+            yolo_memes = []
+            analysed_memes = st.session_state['scrape_memes']
+            for sentiment,date,meme_txt,title,url in analysed_memes:
+                yolo_memes.append((meme_txt,date,sentiment))
+            strategy_parameters = st.session_state['input_for_strategy']
+            df_buy_deals, df_sell_deals = self.YOLO_trade(yolo_memes,strategy_parameters)
+            if click_button('Generate trading summary'):
+                st.session_state['yolo_trading'] = df_buy_deals, df_sell_deals
+                st.experimental_rerun()
+            if click_button('Back'):
+                del st.session_state['top_memes']
+                del st.session_state['input_for_reddit']
+                st.experimental_rerun()
 
+        # summary with balloons
+        elif 'summary_balloons' not in st.session_state:
+            st.balloons()
+            self._steps_description_moon(0,0,0,1)
+            df_buy_deals,df_sell_deals = st.session_state['yolo_trading']
+            st.session_state['summary_balloons'] = None
+            self.trade_summary(df_buy_deals,df_sell_deals)
+            if click_button('Finished'):
+                for key in st.session_state.keys():
+                    del st.session_state[key]
+                st.experimental_rerun()
+
+        # summary
+        elif 'summary' not in st.session_state:
+            self._steps_description_moon(0,0,0,1)
+            df_buy_deals,df_sell_deals = st.session_state['yolo_trading']
+            self.trade_summary(df_buy_deals,df_sell_deals)
+            if click_button('Finished'):
+                for key in st.session_state.keys():
+                    del st.session_state[key]
+                st.experimental_rerun()
 
     def reddit_user_input_moon(self, start_trade) -> tuple:
         options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other']
@@ -167,7 +207,7 @@ class trade(Page):
         subreddit = subreddit.strip() # remove trailing spaces
         if subreddit[:2]=='r/':
             subreddit = subreddit[2:]
-        num_memes = st.number_input('Select number of memes you want to consider', value = 10)
+        num_memes = st.number_input('Select number of memes you want to consider', value = 50)
 
         # select start-end dates
         start_date = datetime.date.today() - datetime.timedelta(days=11)
@@ -178,7 +218,7 @@ class trade(Page):
 
         return subreddit, num_memes, start_reddit, end_reddit
 
-    def scrape_reddit_memes(self,subreddit:str, num_memes:int, start_reddit:str, end_reddit:str):
+    def scrape_reddit_memes(self, subreddit:str, num_memes:int, start_reddit:str, end_reddit:str)->list:
         # reddit object
         reddit = praw.Reddit(
                 client_id=st.secrets["client_id"],
@@ -194,27 +234,32 @@ class trade(Page):
         post_placeholder = st.empty()
         bar = st.progress(0)
         image_placeholder = st.empty()
+        start = pd.to_datetime(start_reddit)
+        end = pd.to_datetime(end_reddit)
+        s = time.time()
         for post in subreddit.hot(limit=None):
             url = post.url
             _,ext = os.path.splitext(url)
-            if ext in allowed_image_extensions:
+            if ext in allowed_image_extensions and self._within_time_interval(post,start,end):
                 response = requests.get(url)
                 img = Image.open(BytesIO(response.content))
                 self._set_background(url)
-                sentiment = self._nltk_sentiment(pytesseract.image_to_string(img))
+                meme_txt = pytesseract.image_to_string(img)
+                sentiment = self._nltk_sentiment(meme_txt)
                 title = post.title
                 date = datetime.datetime.utcfromtimestamp(post.created_utc).strftime('%Y-%m-%d %H:%M:%S')
-                memes.append((sentiment,date,title,url))
+                memes.append((sentiment,date,meme_txt,title,url))
                 passed+=1
-                post_placeholder.text(f'>>> downloading image at {url}')
+                post_placeholder.text(f'>>> analysing meme image at {url}')
                 bar.progress(passed/num_memes)
                 image_placeholder.image(f'{url}',use_column_width = 'auto')
                 if passed>=num_memes:
                     break
-        post_placeholder.text('Memes/pictures dowloaded. To continue please click next on the bottom of the page.')
+        e = time.time()
+        post_placeholder.text(f'Memes/pictures scraped and analysed in {round(e-s,4)} seconds. To continue please click "Next" on the bottom of the page.')
         return memes
 
-    def _set_background(self, png_url, placeholder:bool = False):
+    def _set_background(self, png_url:str, placeholder:bool = False):
         page_bg_img = f'<style>body {{background-image: url("{png_url}");background-size: 12px;}}</style>'
         
         self.placeholder = st.empty()
@@ -224,31 +269,23 @@ class trade(Page):
             st.markdown(page_bg_img, unsafe_allow_html=True)
 
     def _steps_description_moon(self,is_run1:bool,is_run2:bool,is_run3:bool,\
-                        is_run4:bool,is_run5:bool,is_run6,runColor=st.get_option("theme.primaryColor"),\
+                        is_run4:bool,runColor=st.get_option("theme.primaryColor"),\
                         nonrunColor='#631126'):
 
         txt = '1. Select parameters for trading strategy'
         color = f"{is_run1*runColor+(1-is_run1)*nonrunColor}"
         markdown_css(txt,self.text_size,color)
         
-        txt = '2. Scrape through Reddit memes'
+        txt = '2. Scrape and analyse text in Reddit memes'
         color = f"{is_run2*runColor+(1-is_run2)*nonrunColor}"
         markdown_css(txt,self.text_size,color)
-
-        txt = '3. Extract texts from memes'
+        
+        txt = '3. YOLO trading'
         color = f"{is_run3*runColor+(1-is_run3)*nonrunColor}"
         markdown_css(txt,self.text_size,color)
 
-        txt = '4. Sentiment analysis on texts'
+        txt = '4. Generate summary of trading results'
         color = f"{is_run4*runColor+(1-is_run4)*nonrunColor}"
-        markdown_css(txt,self.text_size,color)
-        
-        txt = '5. YOLO trading'
-        color = f"{is_run5*runColor+(1-is_run5)*nonrunColor}"
-        markdown_css(txt,self.text_size,color)
-
-        txt = '6. Generate summary of trading results'
-        color = f"{is_run6*runColor+(1-is_run6)*nonrunColor}"
         markdown_css(txt,self.text_size,color)
 
     def diamond_hands(self):
@@ -345,14 +382,14 @@ class trade(Page):
             txt = 'Sentiment of top 10 comments with highest score (red is negative, green is positive, yellow is neutral):'
             markdown_css(txt,self.text_size,self.white)
             for i in range(10):
-                com,sentiment = analysed_comments[i]
+                com_body,date,sentiment = analysed_comments[i]
                 if sentiment==1:
                     color = self.green
                 elif sentiment==0:
                     color = self.yellow
                 else:
                     color = self.red
-                txt = f'{i+1}. '+ com.body
+                txt = f'{i+1}. '+ com_body
                 txt = txt.replace("\n", "")
                 markdown_css(txt,self.text_size,color,height=20)
             click_button('Start YOLO trading!')
@@ -524,7 +561,8 @@ class trade(Page):
         analysed_comments = []
         for com in comments:
             sentiment = self._nltk_sentiment(com.body)
-            analysed_comments.append((com,sentiment))
+            date = datetime.datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d %H:%M:%S')
+            analysed_comments.append((com.body,date,sentiment))
             if len(com.body)>88:
                 combody = com.body[:88].replace('\n','')
                 txt = f'Comment: {combody} ...'
@@ -564,18 +602,16 @@ class trade(Page):
         self.placeholder = st.empty()
         bar = st.progress(0)
         i = 0
-        for com,sentiment in analysed_comments:
-            words = re.split("\s|(?<!\d)[,.](?!\d)", com.body)
+        for com_body,date,sentiment in analysed_comments:
+            words = re.split("\s|(?<!\d)[,.](?!\d)", com_body)
             for w in words:
                 if w in symbols:
                     if sentiment==1:
-                        date = datetime.datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d %H:%M:%S')
                         buy.append((w,date))
                         txt = f'Buy: {symbols[w]} ({w}) on {date}'
                         self._markdown_css(txt,self.text_size,self.green,placeholder=True)
                         time.sleep(0.1)
                     elif sentiment==-1:
-                        date = datetime.datetime.utcfromtimestamp(com.created_utc).strftime('%Y-%m-%d %H:%M:%S')
                         sell.append((w,date))
                         txt = f'Sell: {symbols[w]} ({w}) on {date}'
                         self._markdown_css(txt,self.text_size,self.red,placeholder=True)
@@ -619,25 +655,27 @@ class trade(Page):
             self._markdown_css(txt,self.text_size,self.green,placeholder=True)
             i+=1
             bar.progress(i/denom)
+        
+        df_buy_deals = pd.DataFrame(buy_deals)
+        if len(buy_deals)>0:
+            df_buy_deals.columns = ['ticker','company','open','close','open_time','close_time']
+            df_buy_deals['profit'] = df_buy_deals['close']-df_buy_deals['open']
+            df_buy_deals.sort_values(by=['ticker','open_time'],inplace = True)
+            df_buy_deals['volume'] = 1
 
-        df_buy_deals,df_sell_deals = pd.DataFrame(buy_deals),pd.DataFrame(sell_deals)
-        df_buy_deals.columns = ['ticker','company','open','close','open_time','close_time']
-        df_sell_deals.columns = ['ticker','company','open','close','open_time','close_time']
-        df_buy_deals['profit'] = df_buy_deals['close']-df_buy_deals['open']
-        df_sell_deals['profit'] = df_sell_deals['open']-df_sell_deals['close']
-        df_buy_deals.sort_values(by=['ticker','open_time'],inplace = True)
-        df_sell_deals.sort_values(by=['ticker','open_time'],inplace = True)
-        df_buy_deals['volume'],df_sell_deals['volume'] = 1,1
+        df_sell_deals = pd.DataFrame(sell_deals)
+        if len(sell_deals):
+            df_sell_deals.columns = ['ticker','company','open','close','open_time','close_time']
+            df_sell_deals['profit'] = df_sell_deals['open']-df_sell_deals['close']
+            df_sell_deals.sort_values(by=['ticker','open_time'],inplace = True)
+            df_sell_deals['volume'] = 1
         return df_buy_deals,df_sell_deals
 
     def trade_summary(self, df_buy_deals:pd.DataFrame, df_sell_deals:pd.DataFrame):
-        df_buy_grouped = df_buy_deals.groupby('ticker')['profit'].sum().reset_index()
-        df_sell_grouped = df_sell_deals.groupby('ticker')['profit'].sum().reset_index()
-        df_grouped = pd.concat([df_buy_grouped,df_sell_grouped]).groupby('ticker')['profit'].sum().reset_index()
-        
-        # currency
-        # df_buy_deals['currency'] = [self._get_currency(ticker) for ticker in df_buy_grouped['ticker']]
-        # df_sell_deals['currency'] = [self._get_currency(ticker) for ticker in df_sell_grouped['ticker']]
+        df_buy_grouped = df_buy_deals.groupby('ticker')['profit'].sum().reset_index() if len(df_buy_deals)>0 else pd.DataFrame()
+        df_sell_grouped = df_sell_deals.groupby('ticker')['profit'].sum().reset_index() if len(df_sell_deals)>0 else pd.DataFrame()
+        df_grouped = pd.concat([df_buy_grouped,df_sell_grouped]).groupby('ticker')['profit'].sum().reset_index() if len(df_buy_deals)+len(df_sell_deals)>0 else pd.DataFrame()
+        symbols = self._get_symbols()
         if st.checkbox('Summary',value=True):
             long,short = len(df_buy_deals),len(df_sell_deals)
             trades = long+short
@@ -657,50 +695,70 @@ class trade(Page):
 
         # profit barplots by ticker
         if st.checkbox('Long deals profit'):
-            profit = sum(df_buy_grouped['profit'])
-            txt = f'Total money made: {profit} USD'
-            markdown_css(txt,self.text_size,self.white)
-            fig = px.bar(df_buy_grouped, x='ticker', y='profit',\
-                color='profit',height=500,\
-                title='Long deals',color_continuous_scale='Bluered_r')
-            st.plotly_chart(fig, use_container_width=True)
-        # profit barplots by ticker
-        if st.checkbox('Short deals profit'):
-            profit = sum(df_sell_grouped['profit'])
-            txt = f'Total money made: {profit} USD'
-            markdown_css(txt,self.text_size,self.white)
-            fig = px.bar(df_sell_grouped, x='ticker', y='profit',\
+            if len(df_buy_grouped)==0:
+                txt = 'No long deals'
+                markdown_css(txt,self.text_size,self.white)
+            else:
+                profit = sum(df_buy_grouped['profit'])
+                txt = f'Total money made: {profit} USD'
+                markdown_css(txt,self.text_size,self.white)
+                fig = px.bar(df_buy_grouped, x='ticker', y='profit',\
                     color='profit',height=500,\
                     title='Long deals',color_continuous_scale='Bluered_r')
-            st.plotly_chart(fig, use_container_width=True)
+                st.plotly_chart(fig, use_container_width=True)
+
+        # profit barplots by ticker
+        if st.checkbox('Short deals profit'):
+            if len(df_sell_grouped)==0:
+                txt = 'No short deals'
+                markdown_css(txt,self.text_size,self.white)
+            else:
+                profit = sum(df_sell_grouped['profit'])
+                txt = f'Total money made: {profit} USD'
+                markdown_css(txt,self.text_size,self.white)
+                fig = px.bar(df_sell_grouped, x='ticker', y='profit',\
+                        color='profit',height=500,\
+                        title='Long deals',color_continuous_scale='Bluered_r')
+                st.plotly_chart(fig, use_container_width=True)
 
         # long/short volumes
         if st.checkbox('Long deals volumes'):
-            df_buy_volumes = df_buy_deals.groupby('ticker')['volume'].sum().reset_index()
-            fig = px.bar(df_buy_deals, x='ticker', y='volume',\
-                    color='volume',height=500,\
-                    title='Long deals')
-            st.plotly_chart(fig, use_container_width=True)
+            if len(df_buy_deals)==0:
+                txt = 'No long deals'
+                markdown_css(txt,self.text_size,self.white)
+            else:
+                df_buy_volumes = df_buy_deals.groupby('ticker')['volume'].sum().reset_index()
+                df_buy_volumes['company'] = df_buy_volumes['ticker'].map(symbols)
+                fig = px.pie(df_buy_volumes, values='volume', names='ticker', hover_data = ['company'], title='Traded Volumes', width=1200, height=900)
+                fig.update_traces(textposition='inside', textinfo='percent+label')
+                fig.update_layout(uniformtext_minsize=20, uniformtext_mode='hide')
+                st.plotly_chart(fig, use_container_width=True)
 
         if st.checkbox('Short deals volumes'):
-            df_sell_volumes = df_sell_deals.groupby('ticker')['volume'].sum().reset_index()
-            fig = px.bar(df_sell_volumes, x='ticker', y='volume',\
-                    color='volume',height=500,\
-                    title='Long deals')
-            st.plotly_chart(fig, use_container_width=True)
+            if len(df_sell_deals)==0:
+                txt = 'No short deals'
+                markdown_css(txt,self.text_size,self.white)
+            else:
+                df_sell_volumes = df_sell_deals.groupby('ticker')['volume'].sum().reset_index()
+                df_sell_volumes['company'] = df_sell_volumes['ticker'].map(symbols)
+                fig = px.pie(df_sell_volumes, values='volume', names='ticker', hover_data = ['company'], title='Traded Volumes',width=1500, height=1200)
+                fig.update_layout(uniformtext_minsize=20, uniformtext_mode='hide')
+                fig.update_traces(textposition='inside', textinfo='percent+label')
+                st.plotly_chart(fig, use_container_width=True)
 
         # long/short deals data
         if st.checkbox('Show long deals data'):
             st.write(df_buy_deals)
-            download=click_button('Download csv')
+            download=click_button('Download csv',key='long_deal_download')
             if download:
                 csv = df_buy_deals.to_csv(index=False)
                 b64 = base64.b64encode(csv.encode()).decode()  # some strings
                 linko= f'<a href="data:file/csv;base64,{b64}" download="long_deals.csv">Click to download </a>'
                 st.markdown(linko, unsafe_allow_html=True)
+
         if st.checkbox('Show short deals data'):
             st.write(df_sell_deals)
-            download=click_button('Download csv')
+            download=click_button('Download csv',key='short_deal_download')
             if download:
                 csv = df_sell_deals.to_csv(index=False)
                 b64 = base64.b64encode(csv.encode()).decode()  # some strings
@@ -721,10 +779,7 @@ class trade(Page):
                 date = df_buy_deals.iloc[i]['open_time']
                 txt = f'Sell: {symbols[ticker]} ({ticker}) on {date}'
                 markdown_css(txt,self.text_size,self.red,col=col2)
-    # @st.cache
-    # def _get_currency(self, ticker:str) -> str:
-    #     ticker = yf.Ticker(ticker)
-    #     return ticker.info['currency']
+
 
     def _find_opening_price(self, data:pd.DataFrame, start:str):
         for i in range(len(data)):
