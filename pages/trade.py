@@ -264,7 +264,7 @@ class trade(Page):
                 if passed>=num_memes:
                     break
         e = time.time()
-        bar = st.progress(1.0)
+        bar.progress(1.0)
         if passed<num_memes:
             txt = f'In this subreddit we found only {passed} memes/pictures for the selected scraping period.'
             self._markdown_css(txt,self.text_size,self.white)
