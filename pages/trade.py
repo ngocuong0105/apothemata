@@ -218,8 +218,8 @@ class trade(Page):
         num_memes = st.number_input('Select number of memes you want to consider', value = 50)
 
         # select start-end dates
-        start_date = datetime.date.today() - datetime.timedelta(days=41)
-        end_date = start_date + datetime.timedelta(days=4)
+        start_date = datetime.date.today() - datetime.timedelta(days=61)
+        end_date = start_date + datetime.timedelta(days=54)
         start_reddit = pd.to_datetime(st.text_input('Select start date for reddit post', f'{start_date}'))
         txt = f'Select end date for reddit post (should be before start date of trading {start_trade.strftime("%Y-%m-%d")} to avoid forward looking bias.'
         end_reddit = pd.to_datetime(st.text_input(txt, f'{end_date}'))
