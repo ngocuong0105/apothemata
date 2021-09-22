@@ -267,7 +267,7 @@ class trade(Page):
         bar = st.progress(0)
         if passed<num_memes:
             txt = f'In this subreddit we found only {passed} memes/pictures for the selected scraping period.'
-            self._markdown_css(txt)
+            self._markdown_css(txt,self.text_size,self.white)
         post_placeholder.text(f'Memes/pictures scraped and analysed in {round(e-s,4)} seconds. To continue please click "Next" on the bottom of the page.')
         return memes
 
