@@ -86,7 +86,7 @@ class trade(Page):
 
         # initialize starting session
         if 'start' not in st.session_state:
-            txt = 'The workflow is simple and takes up to 9 minutes following these steps:'
+            txt = 'The workflow is simple and takes up to 6 minutes following these steps:'
             markdown_css(txt,self.text_size,f'{st.get_option("theme.primaryColor")}')
             self._steps_description_moon(1,1,1,1)
             if click_button('Start'):
