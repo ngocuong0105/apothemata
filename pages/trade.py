@@ -188,16 +188,24 @@ class trade(Page):
                 for key in st.session_state.keys():
                     del st.session_state[key]
                 st.experimental_rerun()
+            st.caption('Please click finished if you want to build another strategy.')
 
         # summary
         elif 'summary' not in st.session_state:
             self._steps_description_moon(0,0,0,1)
             df_buy_deals,df_sell_deals = st.session_state['yolo_trading']
             self.trade_summary(df_buy_deals,df_sell_deals)
+            if click_button('Give me random meme'):
+                analysed_memes = st.session_state['scrape_memes']
+                _,_,_,_,url = analysed_memes[randint(0,len(analysed_memes)-1)]
+                response = requests.get(url)
+                img = Image.open(BytesIO(response.content))
+                st.image(img)
             if click_button('Finished'):
                 for key in st.session_state.keys():
                     del st.session_state[key]
                 st.experimental_rerun()
+            st.caption('Please click finished if you want to build another strategy.')
 
     def reddit_user_input_moon(self, start_trade) -> tuple:
         options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other']
@@ -580,6 +588,7 @@ class trade(Page):
         self.placeholder = st.empty()
         return analysed_comments
 
+    @st.cache(show_spinner=False, suppress_st_warning=True)
     def YOLO_trade(self, analysed_comments: 'list[tuple[praw.models.Comment,str]]', strategy_parameters:tuple) -> 'tuple[list]':
         # loading tickers between certain times
         @st.cache(show_spinner=False)
