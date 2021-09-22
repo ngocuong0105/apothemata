@@ -218,7 +218,7 @@ class trade(Page):
         num_memes = st.number_input('Select number of memes you want to consider', value = 50)
 
         # select start-end dates
-        start_date = datetime.date.today() - datetime.timedelta(days=11)
+        start_date = datetime.date.today() - datetime.timedelta(days=41)
         end_date = start_date + datetime.timedelta(days=4)
         start_reddit = pd.to_datetime(st.text_input('Select start date for reddit post', f'{start_date}'))
         txt = f'Select end date for reddit post (should be before start date of trading {start_trade.strftime("%Y-%m-%d")} to avoid forward looking bias.'
@@ -264,7 +264,7 @@ class trade(Page):
                 if passed>=num_memes:
                     break
         e = time.time()
-        bar = st.progress(0)
+        bar = st.progress(1.0)
         if passed<num_memes:
             txt = f'In this subreddit we found only {passed} memes/pictures for the selected scraping period.'
             self._markdown_css(txt,self.text_size,self.white)
