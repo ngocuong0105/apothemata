@@ -86,7 +86,7 @@ class trade(Page):
 
         # initialize starting session
         if 'start' not in st.session_state:
-            txt = 'Building this trategy takes up to 9 minutes and has the following steps:'
+            txt = 'The workflow is simple and takes up to 9 minutes following these steps:'
             markdown_css(txt,self.text_size,f'{st.get_option("theme.primaryColor")}')
             self._steps_description_moon(1,1,1,1)
             if click_button('Start'):
@@ -145,12 +145,12 @@ class trade(Page):
         # top memes
         elif 'top_memes' not in st.session_state:
             self._steps_description_moon(0,1,0,0)
-            txt = 'Hottest 10 memes/pictures:'
-            markdown_css(txt,self.text_size,self.white)
             analysed_memes = st.session_state['scrape_memes']
+            txt = f'Hottest {min(10,len(analysed_memes))} memes/pictures:'
+            markdown_css(txt,self.text_size,self.white)
             c1,c2,c3,c4,c5 = st.columns(5)
             ls = [c1,c2,c3,c4,c5]
-            for i in range(10):
+            for i in range(min(10,len(analysed_memes))):
                 _,_,_,title,url = analysed_memes[i]
                 ls[i%5].image(f'{url}', use_column_width = True,caption = f'Title:{title}')
             if click_button('Yolo trading!'):
@@ -264,6 +264,10 @@ class trade(Page):
                 if passed>=num_memes:
                     break
         e = time.time()
+        bar = st.progress(0)
+        if passed<num_memes:
+            txt = f'In this subreddit we found only {passed} memes/pictures for the selected scraping period.'
+            self._markdown_css(txt)
         post_placeholder.text(f'Memes/pictures scraped and analysed in {round(e-s,4)} seconds. To continue please click "Next" on the bottom of the page.')
         return memes
 
@@ -306,7 +310,7 @@ class trade(Page):
         
         # initialize current running session
         if 'current_session' not in st.session_state:
-            txt = 'The workflow is simple and takes up to 7 minutes following these steps:'
+            txt = 'Building this trategy takes up to 9 minutes and has the following steps'
             markdown_css(txt,self.text_size,f'{st.get_option("theme.primaryColor")}')
             self._steps_description_diamond(1,1,1,1,1)
             if click_button('Start'):
