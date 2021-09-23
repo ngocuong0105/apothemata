@@ -703,7 +703,7 @@ class trade(Page):
             markdown_css(txt,self.text_size,self.white)
             fig = px.bar(df_grouped, x='ticker', y='profit',\
                     color='profit',height=500,\
-                    title='Long deals',color_continuous_scale='Bluered_r')
+                    title='All deals',color_continuous_scale='Bluered_r')
             st.plotly_chart(fig, use_container_width=True)
 
         # profit barplots by ticker
