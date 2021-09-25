@@ -21,6 +21,7 @@ import requests
 from io import BytesIO
 import os
 from PIL import Image
+import tweepy
 
 from page import Page
 from utils import markdown_css, click_button, wait_message
@@ -41,7 +42,8 @@ class trade(Page):
             self.reddit_strategy()
         elif strategy == '💬 Tweet It!':
             st.header(f'{strategy}')
-            st.caption('Under development, stay tuned!')
+            st.caption('Strategy under development, stay tuned!')
+            self.twitter_strategy()
         elif strategy == '🇺🇸 I believe Fox News':
             st.header(f'{strategy}')
             pressed = click_button('Find strategy')
@@ -56,6 +58,195 @@ class trade(Page):
         options = ['🚀 Reddit Power', '💬 Tweet It!', '🇺🇸 I believe Fox News', '']
         strategy = st.sidebar.selectbox('Select trading strategy',options, index = len(options)-1)
         return strategy
+
+    def twitter_strategy(self):
+        txt = 'Lets build your trading strategy'
+        markdown_css(txt,25,f'{st.get_option("theme.primaryColor")}')
+
+        # initialize starting session
+        if 'start' not in st.session_state:
+            txt = 'The strategy takes up to 5 minutes following these steps:'
+            markdown_css(txt,self.text_size,f'{st.get_option("theme.primaryColor")}')
+            self._steps_description_twitter(1,1,1,1)
+            if click_button('Start'):
+                st.session_state['start'] = None
+                st.experimental_rerun()
+
+        # taking trading strategy parameters
+        elif 'input_for_strategy' not in st.session_state:
+            self._steps_description_twitter(1,0,0,0)
+            strategy_parameters = self.user_strategy_paramenters()
+            if click_button('Set parameters'):
+                st.session_state['input_for_strategy'] = strategy_parameters
+                st.experimental_rerun()
+            if click_button('Back'):
+                del st.session_state['start']
+                st.experimental_rerun()
+
+        # trading strategy parameters set
+        elif 'parameters_set' not in st.session_state:
+            self._steps_description_twitter(1,0,0,0)
+            strategy_parameters = st.session_state['input_for_strategy']
+            txt = 'Parameters set:'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ Start date: {strategy_parameters[0].strftime("%Y-%m-%d")}'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ End date: {strategy_parameters[1].strftime("%Y-%m-%d")}'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ Stop loss: {strategy_parameters[2]}%'
+            markdown_css(txt,self.text_size,self.white)
+            txt = f'◦ Stop gain: {strategy_parameters[3]}%'
+            markdown_css(txt,self.text_size,self.white)
+            if click_button('Next'):
+                st.session_state['parameters_set'] = None
+                st.experimental_rerun()
+            if click_button('Back'):
+                del st.session_state['input_for_strategy']
+                st.experimental_rerun()
+
+        # twitter input parameters and screpe tweets
+        elif 'input_for_twitter' not in st.session_state:
+            self._steps_description_twitter(0,1,0,0)
+            strategy_parameters = st.session_state['input_for_strategy']
+            start_trade = strategy_parameters[0]
+            input_for_twitter = self.twitter_input(start_trade)
+            if click_button('Scrape Tweets'):
+                st.session_state['input_for_twitter'] = input_for_twitter
+                hashtag, num_tweets, start_twitter, end_twitter = st.session_state['input_for_twitter']
+                df,analysed_tweets = self.scrape_tweets(hashtag, num_tweets, start_twitter, end_twitter)
+                st.session_state['scrape_tweets'] = df,analysed_tweets
+                txt = 'Tweets loaded and analysed:'
+                markdown_css(txt,self.text_size,self.white)
+                st.write(df)
+                click_button('Next')
+            if click_button('Back'):
+                del st.session_state['parameters_set']
+                st.experimental_rerun()
+
+        # yolo trading
+        elif 'yolo_trading' not in st.session_state:
+            self._steps_description_twitter(0,0,1,0)
+            _, analysed_tweets = st.session_state['scrape_tweets']
+            strategy_parameters = st.session_state['input_for_strategy']
+            df_buy_deals, df_sell_deals = self.YOLO_trade(analysed_tweets,strategy_parameters)
+            if click_button('Generate trading summary'):
+                st.session_state['yolo_trading'] = df_buy_deals, df_sell_deals
+                st.experimental_rerun()
+            if click_button('Back'):
+                del st.session_state['input_for_twitter']
+                st.experimental_rerun()
+
+        # summary with balloons
+        elif 'summary_balloons' not in st.session_state:
+            st.balloons()
+            self._steps_description_twitter(0,0,0,1)
+            df_buy_deals,df_sell_deals = st.session_state['yolo_trading']
+            st.session_state['summary_balloons'] = None
+            self.trade_summary(df_buy_deals,df_sell_deals)
+            if click_button('Finished'):
+                for key in st.session_state.keys():
+                    del st.session_state[key]
+                st.experimental_rerun()
+            st.caption('Please click finished if you want to build another strategy.')
+
+        # summary
+        elif 'summary' not in st.session_state:
+            self._steps_description_twitter(0,0,0,1)
+            df_buy_deals,df_sell_deals = st.session_state['yolo_trading']
+            self.trade_summary(df_buy_deals,df_sell_deals)
+            if click_button('Give me random tweet'):
+                _,analysed_tweet= st.session_state['scrape_tweets']
+                tweet,_,_ = analysed_tweet[randint(0,len(analysed_tweet)-1)]
+                markdown_css(tweet,self.text_size,self.white)
+            if click_button('Finished'):
+                for key in st.session_state.keys():
+                    del st.session_state[key]
+                st.experimental_rerun()
+            st.caption('Please click finished if you want to build another strategy.')
+
+    def twitter_input(self, start_trade) -> tuple:
+        options = ['#GME','#trump','#StockMarket','#bitcoin','#crypto', 'other']
+        hashtag = st.selectbox('Select popular hashtag',options, index = 0)
+        if hashtag == 'other':
+            hashtag = st.text_input('Choose hashtag (e.g #hashtag)')
+        hashtag = hashtag.strip() # remove trailing spaces
+        num_tweets = st.number_input('Select number of tweets you want to consider', value = 100)
+
+        # select start-end dates
+        start_date = datetime.date.today() - datetime.timedelta(days=61)
+        end_date = start_date + datetime.timedelta(days=54)
+        txt = 'Select start date for first tweet'
+        start_tweet = st.text_input(txt, f'{start_date}')
+        txt = f'Select end date for last tweet post (should be before start date of trading {start_trade.strftime("%Y-%m-%d")} to avoid forward looking bias.'
+        end_tweet = st.text_input(txt, f'{end_date}')
+        start_tweet = ''.join(start_tweet.split('-'))+'0000'
+        end_tweet = ''.join(end_tweet.split('-'))+'0000'
+        return hashtag, num_tweets, start_tweet, end_tweet
+
+    def scrape_tweets(self, hashtag, num_tweets, start_twitter, end_twitter):
+        analysed_tweets = []
+        text, user_name, media, date, tags, sentiment = [],[],[],[],[],[]
+        auth = tweepy.OAuthHandler(st.secrets["consumer_key"],st.secrets['consumer_secret'])
+        auth.set_access_token(st.secrets['access_token_key'], st.secrets['access_token_secret'])
+        api = tweepy.API(auth,wait_on_rate_limit=True)
+
+        tweet_placeholder = st.empty()
+        bar = st.progress(0)
+        passed = 0
+        for status in tweepy.Cursor(api.search_full_archive,'prod', hashtag, 
+                fromDate=start_twitter, toDate=end_twitter).items(num_tweets):
+            dt = status.created_at.strftime('%Y-%m-%d %H:%M:%S')
+            date.append(dt)
+            if status.truncated:
+                txt = status.extended_tweet['full_text']
+                text.append(txt)
+            else:
+                txt = status.text
+                text.append(txt)
+            user_name.append(status.user.screen_name)
+            ls_tags = [d['text'] for d in status.entities['hashtags']]
+            tags.append(', '.join(ls_tags))
+            sent = self._nltk_sentiment(txt)
+            sentiment.append(sent)
+            if status.entities.get('media'):
+                media.append(status.entities.get('media')[0]['media_url'])
+            else:
+                media.append('NA')
+            analysed_tweets.append((txt,dt,sent))
+            passed += 1
+            tweet_placeholder.text(f'Analysing Tweet: {txt}')
+            bar.progress(passed/num_tweets)
+
+        # dict_status = status._json
+        df = pd.DataFrame()
+        df['date'] = date
+        df['hashtags'] = tags
+        df['user_name'] = user_name
+        df['text'] = text
+        df['media'] = media
+        return df, analysed_tweets
+
+    def _steps_description_twitter(self,is_run1:bool,is_run2:bool,is_run3:bool,\
+                        is_run4:bool,runColor=st.get_option("theme.primaryColor"),\
+                        nonrunColor='#631126'):
+
+        txt = '💬 1. Select parameters for trading strategy'
+        color = f"{is_run1*runColor+(1-is_run1)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
+        
+        txt = '💬 2. Scrape and analyse Tweets'
+        color = f"{is_run2*runColor+(1-is_run2)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
+        
+        txt = '💬 3. YOLO trading'
+        color = f"{is_run3*runColor+(1-is_run3)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
+
+        txt = '💬 4. Generate summary of trading results'
+        color = f"{is_run4*runColor+(1-is_run4)*nonrunColor}"
+        markdown_css(txt,self.text_size,color)
+
+
 
     def reddit_strategy(self):
         # Choosing risk appetite
@@ -633,7 +824,6 @@ class trade(Page):
             bar.progress(i/len(analysed_comments))
         buy.sort(key=lambda x:x[1])
         sell.sort(key=lambda x:x[1])
-
         # close positions based on stop loss/gain and end date of trading
         # dislpay trades
         denom = len(buy)+len(sell)
@@ -656,7 +846,7 @@ class trade(Page):
             self._markdown_css(txt,self.text_size,self.red,placeholder=True)
             i+=1
             bar.progress(i/denom)
-
+        
         for ticker,start in sell:
             start_date, _ = start.split(' ')
             data = _load_tickers_data(ticker, start_date, end_date)
