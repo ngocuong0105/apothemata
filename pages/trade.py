@@ -143,6 +143,10 @@ class trade(Page):
             df_buy_deals,df_sell_deals = st.session_state['yolo_trading']
             st.session_state['summary_balloons'] = None
             self.trade_summary(df_buy_deals,df_sell_deals)
+            if click_button('Give me random tweet'):
+                _,analysed_tweet= st.session_state['scrape_tweets']
+                tweet,_,_ = analysed_tweet[randint(0,len(analysed_tweet)-1)]
+                markdown_css(tweet,self.text_size,self.white)
             if click_button('Finished'):
                 for key in st.session_state.keys():
                     del st.session_state[key]
@@ -375,6 +379,12 @@ class trade(Page):
             df_buy_deals,df_sell_deals = st.session_state['yolo_trading']
             st.session_state['summary_balloons'] = None
             self.trade_summary(df_buy_deals,df_sell_deals)
+            if click_button('Give me random meme'):
+                analysed_memes = st.session_state['scrape_memes']
+                _,_,_,_,url = analysed_memes[randint(0,len(analysed_memes)-1)]
+                response = requests.get(url)
+                img = Image.open(BytesIO(response.content))
+                st.image(img)
             if click_button('Finished'):
                 for key in st.session_state.keys():
                     del st.session_state[key]
