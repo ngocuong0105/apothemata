@@ -42,7 +42,7 @@ class trade(Page):
             self.reddit_strategy()
         elif strategy == '💬 Tweet It!':
             st.header(f'{strategy}')
-            st.caption('Strategy under development, stay tuned!')
+            st.caption('Strategy is under tuning.')
             self.twitter_strategy()
         elif strategy == '🇺🇸 I believe Fox News':
             st.header(f'{strategy}')
