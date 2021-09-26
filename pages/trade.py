@@ -50,7 +50,7 @@ class trade(Page):
             if pressed:
                 seconds = randint(5,10)
                 wait_message('Searching for trading strategy...',seconds)
-                txt = '🤪 No strategy found. We are sorry you are retarded.'
+                txt = '🤪 No strategy found. Please contact educational support at ineedmoreiq@apothemata.py.'
                 markdown_css(txt,20,self.white,height=200,position='center')
 
     def get_sidebar_input(self) -> str:
