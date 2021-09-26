@@ -1,15 +1,11 @@
 import streamlit as st
-from multipage import MultiPage
+from framework.multipage import MultiPage
 import pages
 
-
-
-about_info = '''# Yolo trade app
-            Investing real money using this app is highly discouraged. '''
-menu_items = {
-	'About': about_info
-}
 # App layout settings
+about_info = 'Investing real money using this app is highly discouraged.'
+menu_items = {'About': about_info}
+
 st.set_page_config(page_title='Apothemata',\
                     page_icon='🅰️',\
                     layout='wide',\

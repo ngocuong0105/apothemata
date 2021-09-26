@@ -10,8 +10,8 @@ import yfinance as yf
 import pickle
 import datetime
 
-from page import Page
-from utils import click_button
+from framework.page import Page
+from framework.utils import click_button
 class checkStock(Page):
     def __init__(self, title: str) -> None:
         super().__init__(title)

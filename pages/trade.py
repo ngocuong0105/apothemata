@@ -1,4 +1,3 @@
-from numpy.lib.function_base import place
 import praw
 import streamlit as st
 from collections import deque
@@ -15,7 +14,7 @@ import yfinance as yf
 import plotly.express as px
 import base64
 import pytesseract
-pytesseract.pytesseract.tesseract_cmd ='tesseract'
+pytesseract.pytesseract.tesseract_cmd ='context/tesseract'
 from PIL import Image
 import requests
 from io import BytesIO
@@ -23,8 +22,8 @@ import os
 from PIL import Image
 import tweepy
 
-from page import Page
-from utils import markdown_css, click_button, wait_message
+from framework.page import Page
+from framework.utils import markdown_css, click_button, wait_message
 
 class trade(Page):
     def __init__(self, title: str) -> None:

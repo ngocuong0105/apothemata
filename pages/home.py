@@ -1,6 +1,6 @@
 import streamlit as st
 import base64
-from page import Page
+from framework.page import Page
 
 
 class home(Page):
@@ -78,7 +78,5 @@ class home(Page):
             </div>
             """
         st.markdown(title_html,unsafe_allow_html=True)
-        return
-
 
 

@@ -10,6 +10,6 @@ class Page(object):
         # Add a title
         st.title(self.title)
         
-    def read_css(file_path: str) -> None:
+    def read_css(self, file_path: str) -> None:
         with open(file_path) as f:
             st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)

@@ -1,5 +1,5 @@
 import streamlit as st
-import page
+import framework.page as page
 class MultiPage: 
     """Framework for combining multiple streamlit applications."""
 
