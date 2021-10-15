@@ -13,7 +13,7 @@ import pages
 about_info = 'Investing real money using this app is highly discouraged.'
 menu_items = {'About': about_info}
 
-st.set_page_config(page_title='Stock Data',\
+st.set_page_config(page_title='Stock Crawler',\
                     page_icon='📈',\
                     layout='wide',\
                     initial_sidebar_state='auto',\
