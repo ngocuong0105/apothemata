@@ -20,10 +20,18 @@ All these data is updated in real time (daily) and can be downloaded in simple c
 
 ![](context/home_page.gif)
 
-**Download Reddit posts**  
+**1. Download Reddit Posts**  
 
-<img src="context/reddit_posts.png" width = "600" height="380">
+<img src="context/reddit_posts.png" width = "600" height="350">
 
-**Get Reddit memes**  
+**2. Get Reddit Memes**  
 
-<img src="context/reddit_memes.png" width = "600" height="480">  
+<img src="context/reddit_memes.png" width = "600" height="450">  
+
+**3. Visualize Stock Data**  
+
+<img src="context/gme.png" width = "600" height="380">  
+
+**4. Dowload Stock Data**  
+
+<img src="context/gme_data.png" width = "600" height="300">  
