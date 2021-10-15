@@ -35,6 +35,7 @@ class trade(Page):
         self.text_size = 16
 
     def load_page(self):
+        self.show_title()
         strategy = self.get_input()
         if strategy == '🚀 Reddit Power':
             st.header(f'{strategy}')
@@ -53,7 +54,7 @@ class trade(Page):
                 markdown_css(txt,20,self.white,height=200,position='center')
 
     def get_input(self) -> str:
-        st.header('Select Trading Strategy')
+        st.subheader('Select Trading Strategy')
         options = ['🚀 Reddit Power', '💬 Tweet It!', '🇺🇸 I believe Fox News', '']
         strategy = st.selectbox('Select strategy',options, index = len(options)-1)
         return strategy
