@@ -6,8 +6,8 @@ import pages
 about_info = 'Investing real money using this app is highly discouraged.'
 menu_items = {'About': about_info}
 
-st.set_page_config(page_title='',\
-                    page_icon='🅰️',\
+st.set_page_config(page_title='Stock Data',\
+                    page_icon='📈',\
                     layout='wide',\
                     initial_sidebar_state='auto',\
                     menu_items=menu_items)
@@ -15,7 +15,7 @@ st.set_page_config(page_title='',\
 app = MultiPage()
 home = pages.home(title = 'Home')
 checkStock = pages.checkStock(title = 'Get Stock Prices')
-yoloData = pages.getYoloData(title = 'Get Yolo Data')
+yoloData = pages.getAltData(title = 'Get Alternative Data')
 trade = pages.trade(title = 'Yolo Trade')
 
 # Add all your application here
