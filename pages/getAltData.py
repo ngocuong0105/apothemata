@@ -5,6 +5,7 @@ import os
 import time
 from PIL import Image
 import pandas as pd
+from pandas.core.arrays import boolean
 import praw
 import requests
 import streamlit as st
@@ -18,13 +19,20 @@ from framework.page import Page
 from framework.utils import markdown_css, click_button
 
 class getAltData(Page):
+    '''
+    This object represents the Get Alternative Data page.
+    Supports downloading data in csv fies from Reddit and Twitter.
+    '''
     def __init__(self, title: str) -> None:
         super().__init__(title)
         self.white = '#ffffff'
 
     def load_page(self) -> None:
+        '''
+        Mandatory load page method.
+        '''
         self.show_title()
-        data_source = self.get_input()
+        data_source = self.get_data_source()
         options = ['🚀 Reddit', '🐦 Twitter']
         d = dict(zip([i for i in range(len(options))],options))
         if data_source == d[0]:
@@ -38,7 +46,10 @@ class getAltData(Page):
         elif data_source == d[1]:
             self.twitter_data()
 
-    def twitter_data(self):
+    def twitter_data(self) -> None:
+        '''
+        This method controls the user flow for downloading Tweets in a csv file.
+        '''
         if 'twitter_data' not in st.session_state:
             input_for_twitter = self.twitter_input()
             if click_button('Load Tweets'):
@@ -60,7 +71,10 @@ class getAltData(Page):
                     del st.session_state[key]
                 st.experimental_rerun()
 
-    def reddit_post_data(self):
+    def reddit_post_data(self) -> None:
+        '''
+        This method controls the user flow for downloading Reddit Posts in a csv file.
+        '''
         if 'reddit_posts_data' not in st.session_state:
             input_for_reddit = self.reddit_user_input_posts()
             if click_button('Load Posts'):
@@ -81,7 +95,10 @@ class getAltData(Page):
                     del st.session_state[key]
                 st.experimental_rerun()
 
-    def reddit_meme_data(self):
+    def reddit_meme_data(self) -> None:
+        '''
+        This method controls the flow for downloading Reddit Memes in a csv file.
+        '''
         if 'reddit_memes_data' not in st.session_state:
             input_for_reddit = self.reddit_user_input_memes()
             if click_button('Load Memes'):
@@ -105,6 +122,10 @@ class getAltData(Page):
                 st.experimental_rerun()
 
     def reddit_user_input_posts(self) -> tuple:
+        '''
+        Takes user input for downloading reddit posts data.
+        '''
+
         # select subreddit
         options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other']
         subreddit = st.selectbox('Select your favourite subreddit',options, index = 0)
@@ -150,6 +171,9 @@ class getAltData(Page):
         return subreddit, start_reddit, end_reddit, num_subs, num_comments, max_level
 
     def reddit_user_input_memes(self) -> tuple:
+        '''
+        This method taked user input for downloading Reddit memes.
+        '''
         options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other']
         subreddit = st.selectbox('Select your favourite subreddit',options, index = 0)
         if subreddit == 'other':
@@ -169,6 +193,12 @@ class getAltData(Page):
         return subreddit, num_memes, start_reddit, end_reddit
 
     def scrape_reddit_data(self, user_input:tuple) -> pd.DataFrame:
+        '''
+        Scrapes reddit posts and returns them in the form of a dataframe.
+        Gives date, author, text and upvotes of hottest posts, comments and replies.
+        Comments have replies which on their own have replies. This defines a comments/replies
+        tree. We have used BFS to traverse all comments and stored them in the dataframe.
+        '''
         subreddit, start, end, num_subs, num_comments, max_level = user_input
         # reddit object
         reddit = praw.Reddit(
@@ -243,7 +273,12 @@ class getAltData(Page):
         df_comments.columns = ['Date','Author','Text','Upvotes']
         return df_comments
 
-    def scrape_reddit_memes(self, subreddit:str, num_memes:int, start_reddit:str, end_reddit:str)->list:
+    def scrape_reddit_memes(self, subreddit:str, num_memes:int, start_reddit:str, end_reddit:str) -> pd.DataFrame:
+        '''
+        Scrapes reddit memes and returns them into a dataframe. Meme themselves are stored as urls. 
+        Direct image download (e.g .png files) is avoided due to memory contraints.
+        Text of memes is taken out using tesseract.
+        '''
         # reddit object
         reddit = praw.Reddit(
                 client_id=st.secrets["client_id"],
@@ -268,7 +303,7 @@ class getAltData(Page):
             if ext in allowed_image_extensions and self._within_time_interval(post,start,end):
                 response = requests.get(url)
                 img = Image.open(BytesIO(response.content))
-                self._set_background(url)
+                self._show_image(url)
                 meme_txt = pytesseract.image_to_string(img)
                 title = post.title
                 date = datetime.datetime.utcfromtimestamp(post.created_utc).strftime('%Y-%m-%d %H:%M:%S')
@@ -289,13 +324,19 @@ class getAltData(Page):
         df_memes.columns = ['Date','Meme Text', 'Post Title', 'URL']
         return df_memes
 
-    def get_input(self) -> str:
+    def get_data_source(self) -> str:
+        '''
+        Input for selected data source
+        '''
         st.subheader('Select Data Source')
         options = ['🚀 Reddit', '🐦 Twitter', '']
         data_source = st.selectbox('Select source',options, index = len(options)-1)
         return data_source
     
     def twitter_input(self) -> tuple:
+        '''
+        User input for getting twitter data.
+        '''
         options = ['#GME','#trump','#StockMarket','#bitcoin','#crypto', 'other']
         hashtag = st.selectbox('Select popular hashtag',options, index = 0)
         if hashtag == 'other':
@@ -314,7 +355,11 @@ class getAltData(Page):
         end_tweet = ''.join(end_tweet.split('-'))+'0000'
         return hashtag, num_tweets, start_tweet, end_tweet
 
-    def scrape_tweets(self, hashtag, num_tweets, start_twitter, end_twitter):
+    def scrape_tweets(self, hashtag:str, num_tweets:int, start_twitter:str, end_twitter:str) -> pd.DataFrame:
+        '''
+        Scrape Tweets for selected hashtag.
+        Note there is a user limit for fetches - 10000 tweets per month.
+        '''
         text, user_name, media, date, tags = [],[],[],[],[]
         auth = tweepy.OAuthHandler(st.secrets["consumer_key"],st.secrets['consumer_secret'])
         auth.set_access_token(st.secrets['access_token_key'], st.secrets['access_token_secret'])
@@ -353,14 +398,21 @@ class getAltData(Page):
         return df
     
 
-    def _within_time_interval(self, reddit_obj: praw.models, start:datetime, end: datetime):
+    def _within_time_interval(self, reddit_obj: praw.models, start:datetime, end: datetime) -> boolean:
+        '''
+        Check whether a reddit object such as submission, comment or reply 
+        is between start and end timestamps.
+        '''
         utc_time = datetime.datetime.utcfromtimestamp(reddit_obj.created_utc).strftime('%Y-%m-%d')
         datetime_time = pd.to_datetime(utc_time)
         if datetime_time < start or datetime_time > end:
             return False
         return True
 
-    def _set_background(self, png_url:str, placeholder:bool = False):
+    def _show_image(self, png_url:str, placeholder:bool = False) -> None:
+        '''
+        Display image on the page. We use it for displaying memes.
+        '''
         page_bg_img = f'<style>body {{background-image: url("{png_url}");background-size: 12px;}}</style>'
         
         self.placeholder = st.empty()
@@ -368,16 +420,3 @@ class getAltData(Page):
             self.placeholder.markdown(page_bg_img, unsafe_allow_html=True)
         else:
             st.markdown(page_bg_img, unsafe_allow_html=True)
-
-    def download_image_button(url: str, format_type:str) -> None:
-        '''
-        Button for downloading an image.
-        '''
-        txt = 'Save file'
-        button = click_button(txt,size=15)
-        if button:
-            st.download_button(
-                label='Click to download',
-                data=url,
-                file_name=f'result.{format_type}',
-                mime=f'image/{format_type}')

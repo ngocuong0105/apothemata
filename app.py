@@ -1,3 +1,10 @@
+'''
+Driver code of the app.
+To run it you neet to install streamlit v.1.0 and run in the terminal
+streamlit run app.py
+Do not forget to set the current working directory where app.py is!
+'''
+
 import streamlit as st
 from framework.multipage import MultiPage
 import pages
@@ -11,6 +18,7 @@ st.set_page_config(page_title='Stock Data',\
                     layout='wide',\
                     initial_sidebar_state='auto',\
                     menu_items=menu_items)
+
 # Create an instance of the app 
 app = MultiPage()
 home = pages.home(title = 'Home')
@@ -18,7 +26,7 @@ checkStock = pages.checkStock(title = 'Get Stock Prices')
 yoloData = pages.getAltData(title = 'Get Alternative Data')
 trade = pages.trade(title = 'Yolo Trade')
 
-# Add all your application here
+# Add pages of your application here
 app.add_page(home)
 app.add_page(checkStock)
 app.add_page(yoloData)

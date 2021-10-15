@@ -26,6 +26,17 @@ from framework.page import Page
 from framework.utils import markdown_css, click_button, wait_message
 
 class trade(Page):
+    '''
+    This object provides the Yolo Trade page in the app.
+    The goal of this page is to backtest simple trading strategies
+    using Reddit and Twitter data. Results of the trading strategies
+    are displayed in the end to allow the user to improve them.
+    Supports 3 trading strategies using:
+    - Reddit posts/comments/replies
+    - Reddit memes
+    - Tweets on popular hashtags
+    The only trading parameters used are stop loss and stop profit.
+    '''
     def __init__(self, title: str) -> None:
         super().__init__(title)
         self.green = '#00ff32'
@@ -35,6 +46,9 @@ class trade(Page):
         self.text_size = 16
 
     def load_page(self):
+        '''
+        Mandatory load page method.
+        '''
         self.show_title()
         strategy = self.get_input()
         if strategy == '🚀 Reddit Power':
@@ -54,12 +68,22 @@ class trade(Page):
                 markdown_css(txt,20,self.white,height=200,position='center')
 
     def get_input(self) -> str:
+        '''
+        User imput selecting trading strategy.
+        '''
         st.subheader('Select Trading Strategy')
         options = ['🚀 Reddit Power', '💬 Tweet It!', '🇺🇸 I believe Fox News', '']
         strategy = st.selectbox('Select strategy',options, index = len(options)-1)
         return strategy
 
-    def twitter_strategy(self):
+    ################################################################
+    # Twitter trading strategy
+    ################################################################
+
+    def twitter_strategy(self) -> None:
+        '''
+        Streamlit display user flow for building twitter strategy.
+        '''
         txt = 'Lets build your trading strategy'
         markdown_css(txt,25,f'{st.get_option("theme.primaryColor")}')
 
@@ -168,7 +192,10 @@ class trade(Page):
                 st.experimental_rerun()
             st.caption('Please click finished if you want to build another strategy.')
 
-    def twitter_input(self, start_trade) -> tuple:
+    def twitter_input(self, start_trade: str) -> tuple:
+        '''
+        Takes user input for loading Twitter data
+        '''
         options = ['#GME','#trump','#StockMarket','#bitcoin','#crypto', 'other']
         hashtag = st.selectbox('Select popular hashtag',options, index = 0)
         if hashtag == 'other':
@@ -187,7 +214,11 @@ class trade(Page):
         end_tweet = ''.join(end_tweet.split('-'))+'0000'
         return hashtag, num_tweets, start_tweet, end_tweet
 
-    def scrape_tweets(self, hashtag, num_tweets, start_twitter, end_twitter):
+    def scrape_tweets(self, hashtag:str, num_tweets:int, start_twitter:str, end_twitter:str) -> tuple:
+        '''
+        Scrapes and does sentiment analysis on popular tweets.
+        Note there is a limit for fetching 10000 tweets per month!
+        '''
         analysed_tweets = []
         text, user_name, media, date, tags, sentiment = [],[],[],[],[],[]
         auth = tweepy.OAuthHandler(st.secrets["consumer_key"],st.secrets['consumer_secret'])
@@ -230,9 +261,13 @@ class trade(Page):
         df['media'] = media
         return df, analysed_tweets
 
-    def _steps_description_twitter(self,is_run1:bool,is_run2:bool,is_run3:bool,\
-                        is_run4:bool,runColor=st.get_option("theme.primaryColor"),\
-                        nonrunColor='#631126'):
+    def _steps_description_twitter(self, is_run1:bool, is_run2:bool, is_run3:bool,\
+                        is_run4:bool, runColor:str = st.get_option("theme.primaryColor"),\
+                        nonrunColor:str = '#631126') -> None:
+        '''
+        Dynamic description of steps while building twitter strategy.
+        Highlights only active steps. 
+        '''
 
         txt = '💬 1. Select parameters for trading strategy'
         color = f"{is_run1*runColor+(1-is_run1)*nonrunColor}"
@@ -251,8 +286,15 @@ class trade(Page):
         markdown_css(txt,self.text_size,color)
 
 
+    ################################################################
+    # Reddit trading strategy
+    ################################################################
 
-    def reddit_strategy(self):
+    def reddit_strategy(self) -> None:
+        '''
+        Selecting reddit strategy. Two are available:
+        One which scrapes reddit posts and one which scrapes reddit memes.
+        '''
         # Choosing risk appetite
         options =  ['🏦 I want to make a risk-averse long term investment.',
                     '🙌 I have diamond hands!',
@@ -272,7 +314,15 @@ class trade(Page):
         elif risk_type == '🚀 Lets go to the moon!':
             self.go_moon()
 
-    def go_moon(self):
+    ################################################################
+    # Go to the moon trading strategy.
+    # Builds trading strategy based on reddit memes.
+    ################################################################
+
+    def go_moon(self) -> None:
+        '''
+        Streamlit display user flow for reddit memes strategy.
+        '''
         txt = '💰🤑💰 Superb... Armstrong will be your surname!'
         markdown_css(txt,self.text_size,self.white)
         st.write('')# empty line
@@ -408,7 +458,10 @@ class trade(Page):
                 st.experimental_rerun()
             st.caption('Please click finished if you want to build another strategy.')
 
-    def reddit_user_input_moon(self, start_trade) -> tuple:
+    def reddit_user_input_moon(self, start_trade:str) -> tuple:
+        '''
+        Takes user input for loading memes data from reddit.
+        '''
         options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other']
         subreddit = st.selectbox('Select your favourite subreddit',options, index = 0)
         if subreddit == 'other':
@@ -427,7 +480,10 @@ class trade(Page):
 
         return subreddit, num_memes, start_reddit, end_reddit
 
-    def scrape_reddit_memes(self, subreddit:str, num_memes:int, start_reddit:str, end_reddit:str)->list:
+    def scrape_reddit_memes(self, subreddit:str, num_memes:int, start_reddit:str, end_reddit:str) -> list:
+        '''
+        Scrapes reddit memes. Takes the text out of memes and does sentiment analysis.
+        '''
         # reddit object
         reddit = praw.Reddit(
                 client_id=st.secrets["client_id"],
@@ -472,7 +528,10 @@ class trade(Page):
         post_placeholder.text(f'Memes/pictures scraped and analysed in {round(e-s,4)} seconds. To continue please click "Next" on the bottom of the page.')
         return memes
 
-    def _set_background(self, png_url:str, placeholder:bool = False):
+    def _set_background(self, png_url:str, placeholder:bool = False) -> None:
+        '''
+        Display memes while loading them from reddit.
+        '''
         page_bg_img = f'<style>body {{background-image: url("{png_url}");background-size: 12px;}}</style>'
         
         self.placeholder = st.empty()
@@ -483,8 +542,11 @@ class trade(Page):
 
     def _steps_description_moon(self,is_run1:bool,is_run2:bool,is_run3:bool,\
                         is_run4:bool,runColor=st.get_option("theme.primaryColor"),\
-                        nonrunColor='#631126'):
-
+                        nonrunColor='#631126') -> None:
+        '''
+        Dynamic steps description of moon reddit strategy.
+        Highlights only active steps
+        '''
         txt = '1. Select parameters for trading strategy'
         color = f"{is_run1*runColor+(1-is_run1)*nonrunColor}"
         markdown_css(txt,self.text_size,color)
@@ -501,7 +563,15 @@ class trade(Page):
         color = f"{is_run4*runColor+(1-is_run4)*nonrunColor}"
         markdown_css(txt,self.text_size,color)
 
+    ################################################################
+    # Diamonds hands trading strategy.
+    # Builds trading strategy based on reddit posts and comments
+    ################################################################
+
     def diamond_hands(self):
+        '''
+        This method controls streamlit workflow while build diamond hands trading strategy.
+        '''
         txt = '💎 Great! Holding meme stonks is in your nature.'
         markdown_css(txt,self.text_size,self.white)
 
@@ -640,6 +710,9 @@ class trade(Page):
             st.caption('Please click finished if you want to build another strategy.')
 
     def user_strategy_paramenters(self) -> tuple:
+        '''
+        Takes user parameters for trading strategy - stop loss and stop gain.
+        '''
         # select start-end dates
         start_date = datetime.date.today() - datetime.timedelta(days=6)
         end_date = start_date + datetime.timedelta(days=5)
@@ -655,6 +728,9 @@ class trade(Page):
         return start_trade,end_trade,stop_loss,stop_gain
 
     def reddit_user_input(self,start_trade:datetime) -> tuple:
+        '''
+        Takes user input for loading reddit data.
+        '''
         # select subreddit
         options = ['r/wallstreetbets', 'r/stocks', 'r/pennystocks', 'r/robinhood', 'r/GME', 'other']
         subreddit = st.selectbox('Select your favourite subreddit',options, index = 0)
@@ -700,6 +776,11 @@ class trade(Page):
         return subreddit, start_reddit, end_reddit, num_subs, num_comments, max_level
 
     def scrape_reddit_data(self, user_input:tuple) -> 'list[praw.models.Comment]':
+        '''
+        Scrapes reddit data and returns all comments and replies in a list.
+        Comments have replies which on their own have another replies.
+        This defines a comments tree which we traverse using BFS.
+        '''
         subreddit, start, end, num_subs, num_comments, max_level = user_input
         # reddit object
         reddit = praw.Reddit(
@@ -767,6 +848,9 @@ class trade(Page):
         return comments
 
     def analyse_comments(self, comments: 'list[praw.models.Comment]') -> list:
+        '''
+        Sentiment analysis on comments.
+        '''
         # dislpay sentiment
         self.placeholder = st.empty()
         bar = st.progress(0)
@@ -795,6 +879,10 @@ class trade(Page):
 
     @st.cache(show_spinner=False, suppress_st_warning=True)
     def YOLO_trade(self, analysed_comments: 'list[tuple[praw.models.Comment,str]]', strategy_parameters:tuple) -> 'tuple[list]':
+        '''
+        Backtest trades based on sentiment analysed comments and enforces 
+        stop loss and stop gain parameters selected by the user.
+        '''
         # loading tickers between certain times
         @st.cache(show_spinner=False)
         def _load_tickers_data(ticker:str, start:str, end:str):
@@ -885,6 +973,9 @@ class trade(Page):
         return df_buy_deals,df_sell_deals
 
     def trade_summary(self, df_buy_deals:pd.DataFrame, df_sell_deals:pd.DataFrame):
+        '''
+        Generates a trading summary of all deals.
+        '''
         df_buy_grouped = df_buy_deals.groupby('ticker')['profit'].sum().reset_index() if len(df_buy_deals)>0 else pd.DataFrame()
         df_sell_grouped = df_sell_deals.groupby('ticker')['profit'].sum().reset_index() if len(df_sell_deals)>0 else pd.DataFrame()
         df_grouped = pd.concat([df_buy_grouped,df_sell_grouped]).groupby('ticker')['profit'].sum().reset_index() if len(df_buy_deals)+len(df_sell_deals)>0 else pd.DataFrame()
@@ -993,6 +1084,9 @@ class trade(Page):
                 txt = f'Sell: {symbols[ticker]} ({ticker}) on {date}'
                 markdown_css(txt,self.text_size,self.red,col=col2)
 
+    ################################################################
+    # Helper methods in Yolo Trade page
+    ################################################################
 
     def _find_opening_price(self, data:pd.DataFrame, start:str):
         for i in range(len(data)):
