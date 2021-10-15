@@ -1,7 +1,7 @@
 # Stock Data Crawler
 
 ## About
-Stock trading has never been so accessible to everybody in the world. We live in an era where the rise of the retail army and the amateur traders are transforming the markets. Investing now is simplified, personal and with a few clicks on your phone you can place orders and execute trades. However, in order to make money for trading you need data.
+Stock trading has never been so accessible to everybody in the world. We live in an era where the rise of the retail army and the amateur traders are transforming the markets. Investing now is simplified, personal and with a few clicks on your phone you can place orders and execute trades. However, in order to make money while trading you need data.
 
 It is clear to everybody that web data can play a big role on the markets. Last year we saw how an army of traders on the Reddit forum *r/WallStreetBets* helped drive a meteoric rise in GameStop’s stock price, forcing halts in trading and causing a major headache for the short sellers betting against it and banking on the stock falling. Single tweets of a president, influencer, entrepreneur can disrupt the markets increasing the uncertainty.
 
