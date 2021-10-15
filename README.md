@@ -29,7 +29,3 @@ All these data is updated in real time (daily) and can be downloaded in simple c
 Example 1:  
 
 <img src="context/reddit_memes.png" width = "600" height="480">  
-
-Example 2: 
-
-<img src="context/reddit_memes1.png" width = "600" height="480">
