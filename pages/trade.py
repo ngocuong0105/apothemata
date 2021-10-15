@@ -35,7 +35,7 @@ class trade(Page):
         self.text_size = 16
 
     def load_page(self):
-        strategy = self.get_sidebar_input()
+        strategy = self.get_input()
         if strategy == '🚀 Reddit Power':
             st.header(f'{strategy}')
             self.reddit_strategy()
@@ -52,10 +52,10 @@ class trade(Page):
                 txt = '🤪 No strategy found. Please contact educational support at ineedmoreiq@apothemata.py.'
                 markdown_css(txt,20,self.white,height=200,position='center')
 
-    def get_sidebar_input(self) -> str:
-        st.sidebar.header('Please provide input:')
+    def get_input(self) -> str:
+        st.header('Select Trading Strategy')
         options = ['🚀 Reddit Power', '💬 Tweet It!', '🇺🇸 I believe Fox News', '']
-        strategy = st.sidebar.selectbox('Select trading strategy',options, index = len(options)-1)
+        strategy = st.selectbox('Select strategy',options, index = len(options)-1)
         return strategy
 
     def twitter_strategy(self):

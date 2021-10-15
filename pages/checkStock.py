@@ -75,13 +75,13 @@ class checkStock(Page):
     def _search_keyword_cached(self, keyword:str):
 
         # quick search exact match
-        with open('context/symbols_dict.pickle','rb') as f:
+        with open('context/symbols.pickle','rb') as f:
             symbols = pickle.load(f)
         if keyword in symbols:
             return keyword, symbols[keyword]
             
         # more sophisticated search not necessarily exact match
-        json_file = open('context/s&p_symbols.json',)
+        json_file = open('context/symbols_SP500.json',)
         popular_stocks = json.load(json_file)
         ticker_info, score = process.extractOne(keyword, popular_stocks)
         if score<=50:
@@ -176,7 +176,6 @@ class checkStock(Page):
         if value_cols!=[]:
             st.subheader(f'Company name: {company_name}')
             st.write(f'Sector: {yf.Ticker(ticker).info["sector"]}')
-            # st.write(f'Plotted: {", ".join(value_cols)}')
             st.plotly_chart(fig, use_container_width=True)
 
     # Display dataframe

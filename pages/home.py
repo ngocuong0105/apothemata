@@ -1,7 +1,6 @@
 import streamlit as st
 import base64
 
-from streamlit.type_util import Key
 from framework.page import Page
 import os
 
@@ -10,7 +9,7 @@ class home(Page):
         super().__init__(title)
 
     def load_page(self):
-        self.set_title('APOTHEMATA')
+        self.set_title('Stock Data App')
         self.set_background('./context/blocks.gif')
 
 
@@ -39,7 +38,7 @@ class home(Page):
         curr_dir = os.getcwd()
         path = os.path.join(curr_dir,'styles/home_title.css')
         with open(path) as f:
-            title_html = f'<style>{f.read()}</style> <h1 class="title">{title}</h1> <h2 class="subtitle">The YOLO trade app</h2>'
+            title_html = f'<style>{f.read()}</style> <h1 class="title">{title}</h1> <h2 class="subtitle">All data in one place</h2>'
         st.markdown(title_html,unsafe_allow_html=True)
 
 

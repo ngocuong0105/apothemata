@@ -16,7 +16,7 @@ class MultiPage:
         
     def run(self):
         # Dropdown to select the page to run
-        st.sidebar.title('App Navigation')
+        st.sidebar.title('Navigation')
         selected_title = st.sidebar.radio("Go to", list(self.pages.keys()))
         
         # run the app function
