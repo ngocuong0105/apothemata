@@ -18,7 +18,7 @@ All these data is updated in real time (daily) and can be downloaded in simple c
 
 **Home Page**   
 
-![https://share.streamlit.io/ngocuong0105/stockdatacrawler/app.py](context/home_page.gif)
+![](context/home_page.gif)
 
 **Download Reddit posts**  
 
