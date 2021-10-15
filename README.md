@@ -26,6 +26,4 @@ All these data is updated in real time (daily) and can be downloaded in simple c
 
 **Get Reddit memes**  
 
-Example 1:  
-
 <img src="context/reddit_memes.png" width = "600" height="480">  
