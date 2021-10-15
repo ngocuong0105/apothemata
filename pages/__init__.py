@@ -1,4 +1,4 @@
 from pages.home import home
 from pages.checkStock import checkStock
-from pages.getYoloData import getYoloData
+from pages.getAltData import getAltData
 from pages.trade import trade
