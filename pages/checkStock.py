@@ -226,7 +226,7 @@ class checkStock(Page):
         if len(data) == 0:
             st.write('No data loaded')
             return data
-        data = data[(data['date']>=start)&(data['date']<=end)]
+        data = data[(data['date']>=start)&(data['date']<=end)].reset_index(drop = True)
         return data
 
     def _wait_message(self) -> None:
