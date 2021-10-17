@@ -32,6 +32,6 @@ All data is updated in real time (daily) and can be downloaded in simple nicely 
 
 <img src="context/gme.png" width = "600" height="380">  
 
-**4. Dowload Stock Data**  
+**4. Download Stock Data**  
 
 <img src="context/gme_data.png" width = "600" height="300">  
