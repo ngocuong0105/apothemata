@@ -48,7 +48,7 @@ class getAltData(Page):
 
     def twitter_data(self) -> None:
         '''
-        This method controls the user flow for downloading Tweets in a csv file.
+        This method controls the user flow on streamlit UI on streamlit for downloading Tweets in a csv file.
         '''
         if 'twitter_data' not in st.session_state:
             input_for_twitter = self.twitter_input()
@@ -73,7 +73,7 @@ class getAltData(Page):
 
     def reddit_post_data(self) -> None:
         '''
-        This method controls the user flow for downloading Reddit Posts in a csv file.
+        This method controls the user flow on streamlit UI for downloading Reddit Posts in a csv file.
         '''
         if 'reddit_posts_data' not in st.session_state:
             input_for_reddit = self.reddit_user_input_posts()
@@ -86,7 +86,7 @@ class getAltData(Page):
             st.write(df_comments)
             if click_button('Download csv'):
                 csv = df_comments.to_csv(index=False)
-                b64 = base64.b64encode(csv.encode()).decode()  # some strings
+                b64 = base64.b64encode(csv.encode()).decode() 
                 linko= f'<a href="data:file/csv;base64,{b64}" download="reddit_comments.csv">Click to download </a>'
                 st.markdown(linko, unsafe_allow_html=True)
             
@@ -97,7 +97,7 @@ class getAltData(Page):
 
     def reddit_meme_data(self) -> None:
         '''
-        This method controls the flow for downloading Reddit Memes in a csv file.
+        This method controls the flow on streamlit UI for downloading Reddit Memes in a csv file.
         '''
         if 'reddit_memes_data' not in st.session_state:
             input_for_reddit = self.reddit_user_input_memes()
@@ -112,7 +112,7 @@ class getAltData(Page):
             st.write(df_memes)
             if click_button('Download csv'):
                 csv = df_memes.to_csv(index=False)
-                b64 = base64.b64encode(csv.encode()).decode()  # some strings
+                b64 = base64.b64encode(csv.encode()).decode() 
                 linko= f'<a href="data:file/csv;base64,{b64}" download="reddit_memes.csv">Click to download </a>'
                 st.markdown(linko, unsafe_allow_html=True)
             
@@ -142,11 +142,10 @@ class getAltData(Page):
         
         # select number of submissions,comments, level
         num_subs,num_comments,max_level = '','',''
-        num_subs = st.number_input('Select number of hottest posts\
-                        the strategy will scrape through (recommended 10-100)', value = 20, step=1)
+        num_subs = st.number_input('Select number of hottest posts to download (recommended 10-100)', value = 20, step=1)
         if num_subs != '':
             num_subs = int(num_subs)
-            num_comments = st.number_input("Select number of comments with most upvotes to consider (recommended 50-500)", value = 100, step=1)
+            num_comments = st.number_input("Select number of comments with most upvotes to download (recommended 50-500)", value = 100, step=1)
         if num_comments != '':
             num_comments = int(num_comments)
             txt = 'Each reddit post has comments and replies to comments.\
@@ -319,7 +318,7 @@ class getAltData(Page):
         if passed<num_memes:
             txt = f'In this subreddit we found only {passed} memes/pictures for the selected scraping period.'
             self._markdown_css(txt,self.text_size,self.white)
-        post_placeholder.text(f'Memes/pictures scraped and analysed in {round(e-s,4)} seconds. To continue please click "Next" on the bottom of the page.')
+        post_placeholder.text(f'Memes/pictures scraped in {round(e-s,4)} seconds. They are hot out of the oven and ready to download!')
         df_memes = pd.DataFrame(memes)
         df_memes.columns = ['Date','Meme Text', 'Post Title', 'URL']
         return df_memes

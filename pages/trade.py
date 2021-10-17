@@ -82,7 +82,7 @@ class trade(Page):
 
     def twitter_strategy(self) -> None:
         '''
-        Streamlit display user flow for building twitter strategy.
+        This method constrols user flow on streamlit UI for building twitter strategy.
         '''
         txt = 'Lets build your trading strategy'
         markdown_css(txt,25,f'{st.get_option("theme.primaryColor")}')
@@ -321,7 +321,7 @@ class trade(Page):
 
     def go_moon(self) -> None:
         '''
-        Streamlit display user flow for reddit memes strategy.
+        This method controls user flow on streamlit UI for reddit memes strategy.
         '''
         txt = '💰🤑💰 Superb... Armstrong will be your surname!'
         markdown_css(txt,self.text_size,self.white)
@@ -570,7 +570,7 @@ class trade(Page):
 
     def diamond_hands(self):
         '''
-        This method controls streamlit workflow while build diamond hands trading strategy.
+        This method controls streamlit workflow UI while build diamond hands trading strategy.
         '''
         txt = '💎 Great! Holding meme stonks is in your nature.'
         markdown_css(txt,self.text_size,self.white)
