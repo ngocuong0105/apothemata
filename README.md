@@ -12,7 +12,7 @@ That is why, I created a simple [stock data crawler](https://share.streamlit.io/
 - Reddit memes.
 - Twitter posts.
 
-All data is updated in real time (daily) and can be downloaded in simple csv files on which you can do sentiment analysis, image classification (on Reddit memes where people post their stock positions) and other data analysis tasks to improve your trading strategies. 
+All data is updated in real time (daily) and can be downloaded in simple nicely formatted csv files on which you can do sentiment analysis, image classification (on Reddit memes where people post their stock positions) and other data analysis tasks to improve your trading strategies. **It is time to democratize the spread of information in this industry!**
 
 ## Overview of [Stock Crawler](https://share.streamlit.io/ngocuong0105/stockdatacrawler/app.py)
 
@@ -32,6 +32,6 @@ All data is updated in real time (daily) and can be downloaded in simple csv fil
 
 <img src="context/gme.png" width = "600" height="380">  
 
-**4. Dowload Stock Data**  
+**4. Download Stock Data**  
 
 <img src="context/gme_data.png" width = "600" height="300">  
