@@ -1,5 +1,5 @@
 
-<h1 align="center">Stock Data Crawler</h1>
+<h2 align="center">Stock Data Crawler</h2>
 <p align="center">
   <a href="https://share.streamlit.io/ngocuong0105/stockdatacrawler/app.py">
     <img src="context/home_page.gif" alt="Logo" width=600 height=350>
