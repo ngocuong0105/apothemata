@@ -1,9 +1,0 @@
-/sample.csv
-/small_sample.csv
-pages/__pycache__/**
-__pycache__/**
-test.py
-/.streamlit/secrets.toml
-/data
-/twitter_test
-/framework/__pycache__
