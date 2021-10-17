@@ -1,5 +1,13 @@
-# Stock Data Crawler
+<br />
+<p align="center">
+  <a href="https://share.streamlit.io/ngocuong0105/stockdatacrawler/app.py">
+    <img src="context/home_page.gif" alt="Logo" width=600 height=350>
 
+    
+  </a>
+
+  <h1 align="center">Stock Data Crawler</h1>
+  
 ## About
 Stock trading has never been so accessible to everybody in the world. We live in an era where the rise of the retail army and the amateur traders are transforming the markets. Investing now is simplified, personal and with a few clicks on your phone you can place orders and execute trades. However, in order to make money while trading you need data.
 
