@@ -1,12 +1,11 @@
-<br />
+
+<h1 align="center">Stock Data Crawler</h1>
 <p align="center">
   <a href="https://share.streamlit.io/ngocuong0105/stockdatacrawler/app.py">
     <img src="context/home_page.gif" alt="Logo" width=600 height=350>
 
     
   </a>
-
-  <h1 align="center">Stock Data Crawler</h1>
   
 ## About
 Stock trading has never been so accessible to everybody in the world. We live in an era where the rise of the retail army and the amateur traders are transforming the markets. Investing now is simplified, personal and with a few clicks on your phone you can place orders and execute trades. However, in order to make money while trading you need data.
@@ -23,10 +22,6 @@ That is why, I created a simple [stock data crawler](https://share.streamlit.io/
 All data is updated in real time (daily) and can be downloaded in simple nicely formatted csv files on which you can do sentiment analysis, image classification (on Reddit memes where people post their stock positions) and other data analysis tasks to improve your trading strategies. **It is time to democratize the spread of information in this industry!**
 
 ## Overview of [Stock Crawler](https://share.streamlit.io/ngocuong0105/stockdatacrawler/app.py)
-
-**Home Page**   
-
-![](context/home_page.gif)
 
 **1. Download Reddit Posts**  
 
