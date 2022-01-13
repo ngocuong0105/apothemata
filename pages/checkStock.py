@@ -49,6 +49,8 @@ class checkStock(Page):
             return
 
         self.plot(data, time_col, ticker, company_name)
+        if st.checkbox('Show candles sticks plot',value = True):
+            self.plot_candles(data, time_col, ticker, company_name)
         self.show_data(data, ticker)
         self.show_stats(data, ticker)
         self.show_info(ticker)
@@ -161,6 +163,25 @@ class checkStock(Page):
             st.subheader(f'Company name: {company_name}')
             st.write(f'Sector: {yf.Ticker(ticker).info["sector"]}')
             st.plotly_chart(fig, use_container_width=True)
+
+    def plot_candles(self, data: pd.DataFrame, time_col: str, ticker:str, company_name:str) -> pd.DataFrame:
+        '''
+        Display stock prices plot in plotly.
+        '''
+
+        # PLOT
+        fig = go.Figure(
+            data=[go.Candlestick(
+            x=data.index,
+            open=data[f'{ticker}-open'], 
+            high=data[f'{ticker}-high'], 
+            low=data[f'{ticker}-low'], 
+            close=data[f'{ticker}-close'])]
+        )
+
+        st.subheader(f'Candle sticks for {ticker}')
+        st.plotly_chart(fig, use_container_width=True)
+
 
     def show_data(self, data:pd.DataFrame, ticker:str) -> None:
         '''
