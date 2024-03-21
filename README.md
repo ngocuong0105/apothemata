@@ -1,6 +1,6 @@
 
 <p align="center">
-  <a href="https://share.streamlit.io/ngocuong0105/stockdatacrawler/app.py">
+  <a href="https://share.streamlit.io/ngocuong0105/stock-data-crawler/app.py">
     <img src="context/home_page.gif" alt="Logo" width = "650" height="400">
 
     
