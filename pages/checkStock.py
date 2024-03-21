@@ -161,7 +161,7 @@ class checkStock(Page):
 
         if value_cols!=[]:
             st.subheader(f'Company name: {company_name}')
-            st.write(f'Sector: {yf.Ticker(ticker).info["sector"]}')
+            # st.write(f'Sector: {yf.Ticker(ticker).info["sector"]}')
             st.plotly_chart(fig, use_container_width=True)
 
     def plot_candles(self, data: pd.DataFrame, time_col: str, ticker:str, company_name:str) -> pd.DataFrame:
