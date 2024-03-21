@@ -1,3 +1,4 @@
+altair<5
 tweepy==3.10.0
 yfinance==0.1.63
 numpy==1.19.5
@@ -6,7 +7,7 @@ nltk==3.6.2
 pytesseract==0.3.8
 requests==2.25.1
 seaborn==0.11.1
-streamlit==0.89.0
+streamlit
 pandas==1.2.1
 praw==7.4.0
 regex==2021.8.28
