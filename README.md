@@ -41,3 +41,11 @@ All data is updated daily and can be downloaded in simple nicely formatted csv f
 **4. Download Stock Data**  
 
 <img src="context/gme_data.png" width = "600" height="300">  
+
+## For developers
+- to run app
+```
+streamlit run app.py
+```
+
+- to deploy: got to app webpage and click manage app in the bottom right menu and reboot
